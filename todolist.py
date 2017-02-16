@@ -231,6 +231,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         tasks = self.tasksToBinary(self.todolist.getTasks())
         time = self.todolist.getTime()
 
+        asdf
+
         # parameters
         self.livingReward = 0.0
         self.noise = 0.0
