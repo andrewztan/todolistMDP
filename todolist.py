@@ -236,10 +236,17 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         # create mapping of tasks to indices
         self.tasksDict = {}
-        todoTasks = todolist.getTasks()
+        self.todoTasks = todolist.getTasks()
         for i in range(len(todoTasks)):
             task = todoTasks[i]
             tasksDict[task] = i
+
+        # creating Goals and their corresponding tasks pointers
+        goals = todolist.getGoals()
+        goals_to_index_dict = {}
+        for g in goals:
+            task_indices = [self.tasksDict[task] for task in g.getTasks()]
+            goals_to_index_dict[g] = task_indices
 
         # parameters
         self.livingReward = 0.0
@@ -261,6 +268,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.noise = noise
 
     def tasksToBinary(self, tasks):
+        """
+
+        """
         binary_tasks = [1 if task.isComplete() else 0 for task in tasks]
         return binary_tasks
 
@@ -276,6 +286,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getStartState(self):
         """
+        DONE 
+
         Return the start state of the MDP.
         """
         start_state = self.tasksToBinary(self.todolist.getTasks())
@@ -283,7 +295,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getPossibleActions(self, state):
         """
+        DONE 
+
         Return list of possible actions from 'state'.
+        Returns a list of indices
         """
         tasks = state[0]
         possible_actions = [i for i, task in enumerate(tasks) if task == 0]
@@ -291,6 +306,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getTransitionStatesAndProbs(self, state, action):
         """
+        NOT DONE: CHECK DEADLINES OF GOALS USING GOAL DICTS (Created in init class)
+
         Returns list of (nextState, prob) pairs
         representing the states reachable
         from 'state' by taking 'action' along
@@ -301,15 +318,18 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         probabilities nor do we directly model them.
         """
         next_states_probs = []
-        task_index = self.tasks.index(action)
+
+        # action is the index that is passed in 
+        task = self.todoTasks[action]
 
         binary_tasks = state[0]
+        current_time = state[1]
 
         # state for not completing task
-        next_states_probs.append((binary_tasks, state[1] + action.getTimeCost()), 1 - action.getProb())
+        next_states_probs.append((binary_tasks, state[1] + task.getTimeCost()), 1 - task.getProb())
         # state for completing task
-        binary_tasks[task_index] = 1
-        next_states_probs.append((binary_tasks, state[1] + action.getTimeCost()), action.getProb())
+        binary_tasks[action] = 1
+        next_states_probs.append((binary_tasks, state[1] + task.getTimeCost()), task.getProb())
 
         return next_states_probs
 
@@ -323,6 +343,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def isTerminal(self, state):
         """
+        DONE
+
         Returns true if the current state is a terminal state.  By convention,
         a terminal state has zero future rewards.  Sometimes the terminal state(s)
         may have no possible actions.  It is also common to think of the terminal
