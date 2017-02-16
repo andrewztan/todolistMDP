@@ -142,7 +142,7 @@ class Goal():
     # return reward based on time
     def getReward(self, time):
         times = sorted(self.reward.keys())
-        t = next(val for x, i in enumerate(times) if val >= time)
+        t = next(val for x, val in enumerate(times) if val >= time)
         return self.reward[t]
 
     # return deadline time, does not do any computation, just return self.deadline
@@ -226,10 +226,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
     """
 
     def __init__(self, todolist):
-        tasks = self.tasksToBinary(todolist)
-        time = todolist.getTime()
         self.todolist = todolist
-        self.state = (tasks, time)
+        # self.state = (tasks, time)
+        tasks = self.tasksToBinary(self.todolist.getTasks())
+        time = self.todolist.getTime()
 
         # parameters
         self.livingReward = 0.0
@@ -250,9 +250,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         self.noise = noise
 
-    def tasksToBinary(self, todolist):
-        tasks = [1 if task.isComplete() else 0 for task in self.tasks]
-        return tasks
+    def tasksToBinary(self, tasks):
+        binary_tasks = [1 if task.isComplete() else 0 for task in tasks]
+        return binary_tasks
 
     def getState(self):
         return self.state
@@ -269,14 +269,14 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         Return the start state of the MDP.
         """
         start_state = [0] * len(self.todolist.getTasks())
-        time = 0
-        return (start_state, time)
+
+        return (start_state, 0)
 
     def getPossibleActions(self, state):
         """
         Return list of possible actions from 'state'.
         """
-        return self.incompleted_tasks
+        return []
 
     def getTransitionStatesAndProbs(self, state, action):
         """
