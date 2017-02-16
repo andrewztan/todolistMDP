@@ -231,6 +231,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.todolist = todolist
         self.state = (tasks, time)
 
+        asdf
+
         # parameters
         self.livingReward = 0.0
         self.noise = 0.0
