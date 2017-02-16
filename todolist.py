@@ -231,7 +231,12 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         tasks = self.tasksToBinary(self.todolist.getTasks())
         time = self.todolist.getTime()
 
-        asdf
+        # create mapping of tasks to indices
+        self.tasksDict = {}
+        todoTasks = todolist.getTasks()
+        for i in range(len(todoTasks)):
+            task = todoTasks[i]
+            tasksDict[task] = i
 
         # parameters
         self.livingReward = 0.0
