@@ -96,6 +96,9 @@ class ToDoList():
     def getTime(self):
         return self.time
 
+    def getEndtime(self):
+        return self.end_time
+
     def getTasks(self):
         return self.tasks
 
@@ -229,9 +232,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def __init__(self, todolist):
         self.todolist = todolist
-        # self.state = (tasks, time)
-        tasks = self.tasksToBinary(self.todolist.getTasks())
-        time = self.todolist.getTime()
+        self.start_state = self.getStartState()
 
         # create mapping of tasks to indices
         self.tasksDict = {}
@@ -277,7 +278,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         Return the start state of the MDP.
         """
-        start_state = [0] * len(self.todolist.getTasks())
+        start_state = self.tasksToBinary(self.todolist.getTasks())
         return (start_state, 0)
 
     def getPossibleActions(self, state):
