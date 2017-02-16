@@ -5,7 +5,7 @@ import mdp
 import util
 # import optparse
 
-class ToDoList(mdp.MarkovDecisionProcess):
+class ToDoList():
     """
       To-do List
     """
