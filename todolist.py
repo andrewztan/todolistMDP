@@ -242,11 +242,11 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
             tasksDict[task] = i
 
         # creating Goals and their corresponding tasks pointers
-        goals = todolist.getGoals()
-        goals_to_index_dict = {}
-        for g in goals:
+        self.goals = todolist.getGoals()
+        self.goals_to_index_dict = {}
+        for g in self.goals:
             task_indices = [self.tasksDict[task] for task in g.getTasks()]
-            goals_to_index_dict[g] = task_indices
+            self.goals_to_index_dict[g] = task_indices
 
         # parameters
         self.livingReward = 0.0
@@ -306,7 +306,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getTransitionStatesAndProbs(self, state, action):
         """
-        NOT DONE: CHECK DEADLINES OF GOALS USING GOAL DICTS (Created in init class)
+        NOT DONE: CHECK COMPLETION OF GOAL
 
         Returns list of (nextState, prob) pairs
         representing the states reachable
@@ -323,13 +323,21 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         task = self.todoTasks[action]
 
         binary_tasks = state[0]
-        current_time = state[1]
+        new_time = state[1] + task.getTimeCost()
+
+        # check deadlines
+        for goal in self.goals:
+            if new_time > goal.getDeadline():
+                # if a deadline passed, mark all tasks as completed (1)
+                for task_index in self.goals_to_index_dict[goal]:
+                    binary_tasks[task_index] = 1
+        return penalty
 
         # state for not completing task
-        next_states_probs.append((binary_tasks, state[1] + task.getTimeCost()), 1 - task.getProb())
+        next_states_probs.append((binary_tasks, new_time), 1 - task.getProb())
         # state for completing task
         binary_tasks[action] = 1
-        next_states_probs.append((binary_tasks, state[1] + task.getTimeCost()), task.getProb())
+        next_states_probs.append((binary_tasks, new_time), task.getProb())
 
         return next_states_probs
 
