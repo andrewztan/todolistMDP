@@ -158,6 +158,8 @@ class Goal():
 
     def setCompleted(self, completed):
         self.completed = completed
+        for task in self.tasks:
+            task.setCompleted(True)
 
     # return completion status, does not do any computation, just return self.completed
     def isComplete(self):
@@ -231,8 +233,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         tasks = self.tasksToBinary(self.todolist.getTasks())
         time = self.todolist.getTime()
 
-        asdf
-
         # parameters
         self.livingReward = 0.0
         self.noise = 0.0
@@ -271,14 +271,15 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         Return the start state of the MDP.
         """
         start_state = [0] * len(self.todolist.getTasks())
-
         return (start_state, 0)
 
     def getPossibleActions(self, state):
         """
         Return list of possible actions from 'state'.
         """
-        return []
+        tasks = state[0]
+        possible_actions = [i for i, task in enumerate(tasks) if task == 0]
+        return possible_actions
 
     def getTransitionStatesAndProbs(self, state, action):
         """
