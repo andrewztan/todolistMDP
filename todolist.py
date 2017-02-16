@@ -331,7 +331,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
                 # if a deadline passed, mark all tasks as completed (1)
                 for task_index in self.goals_to_index_dict[goal]:
                     binary_tasks[task_index] = 1
-        return penalty
 
         # state for not completing task
         next_states_probs.append((binary_tasks, new_time), 1 - task.getProb())
