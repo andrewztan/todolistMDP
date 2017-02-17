@@ -153,7 +153,7 @@ class Goal():
         return self.deadline
 
     def deadlinePenalty(self):
-        return penalty
+        return self.penalty
 
     def addTask(self, task):
         self.tasks.append(task)
@@ -276,9 +276,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         binary_tasks = [1 if task.isComplete() else 0 for task in tasks]
         return binary_tasks
 
-    def getState(self):
-        return self.state
-
     def getStates(self):
         """
         Return a list of all states in the MDP.
@@ -324,7 +321,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         # action is the index that is passed in 
         task = self.todoTasks[action]
 
-        binary_tasks = state[0]
+        binary_tasks = state[0][:]
         new_time = state[1] + task.getTimeCost()
 
         # check deadlines
@@ -357,16 +354,28 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         reward = 0
         task = self.todoTasks[action]
         reward += task.getReward() # reward from doing a task
-        curr_time = state[1]
-        next_time = nextState[1]
+        prev_tasks = state[0]
+        prev_time = state[1]
         next_tasks = nextState[0]
+        next_time = nextState[1]
+
+        flipped_indices = [y - x for x, y in zip(prev_tasks, next_tasks)]
+        print "prev:", prev_tasks
+        print "next:", next_tasks
+        changed_indices = [i for i, x in enumerate(flipped_indices) if x == 1]
+        changed_goals = set()
+        for task_index in changed_indices:
+            t = self.todoTasks[task_index]
+            changed_goals.add(t.getGoal())
+        print "changed indices:", changed_indices
         # reward (penalty) for missing a deadline during the time of the action
-        for goal in self.goals:
-            if curr_time <= goal.getDeadline() and goal.getDeadline() < next_time:
+        for goal in changed_goals:
+            task_indices = self.goals_to_index_dict[goal]
+            tasks = [next_tasks[i] for i in task_indices]
+            if prev_time <= goal.getDeadline() and goal.getDeadline() < next_time:
                 reward += goal.deadlinePenalty()
             elif task.getGoal() is goal and next_time <= goal.getDeadline():
-                task_indices = goals_to_index_dict[goal]
-                if not 0 in [next_tasks[i] for i in task_indices]:
+                if not 0 in tasks:
                     reward += goal.getReward(next_time)
         return reward
 
@@ -380,7 +389,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         state as having a self-loop action 'pass' with zero reward; the formulations
         are equivalent.
         """
-        return not 0 in state[0] or state[1] > todolist.getEndtime()
+        return not 0 in state[0] or state[1] > self.todolist.getEndtime()
 
 
 if __name__ == '__main__':
@@ -402,15 +411,33 @@ if __name__ == '__main__':
             Task("Task C1", 1), 
             Task("Task C2", 2), 
             Task("Task C3", 3)], 
-            {1: 100, 6: 90, 15: 80},
+            {1: 100, 6: 90, 13: 80},
             penalty=-1000),
     ]
 
-    my_list = ToDoList(goals, start_time=0, end_time=10)
+    my_list = ToDoList(goals, start_time=0, end_time=20)
     mdp = ToDoListMDP(my_list)
     start_state = mdp.getStartState()
-    print("start state: " + str(start_state))
-    print(mdp.getPossibleActions(start_state))
-    print(mdp.getTransitionStatesAndProbs(start_state, 0))
+    action = mdp.getPossibleActions(start_state)[0]
+    curr_state = mdp.getTransitionStatesAndProbs(start_state, action)[0][0]
+    print(curr_state)
+    # action = mdp.getPossibleActions(next_state)[3]
+    # next_state = mdp.getTransitionStatesAndProbs(next_state, action)[0][0]
+    # print(next_state)
+
+    print(mdp.getReward(start_state, action, curr_state))
+    while not mdp.isTerminal(curr_state):
+        action = mdp.getPossibleActions(curr_state)[0]
+        next_state = mdp.getTransitionStatesAndProbs(curr_state, action)[0][0]
+        print(next_state)
+        print(mdp.getReward(curr_state, action, next_state))
+        curr_state = next_state
+
+
+
+
+    # print("start state: " + str(start_state))
+    # print(mdp.getPossibleActions(start_state))
+    # print(mdp.getTransitionStatesAndProbs(start_state, 0))
     # my_list.printDebug()
 
