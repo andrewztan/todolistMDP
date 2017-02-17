@@ -45,6 +45,7 @@ class ToDoList():
     # do a defined action, task
     def action(self, task):  
         reward = 0
+        self.incrementTime(task.getCost()) # first, increment the time so that we are working in the current time
         reward += self.doTask(task)
         reward += self.checkDeadlines()
         return reward
@@ -59,11 +60,10 @@ class ToDoList():
         return penalty
     
     def doTask(self, task):
-        self.incrementTime(task.getCost()) # first, increment the time so that we are working in the current time
         p = task.getProb()
         reward = 0
         reward += task.getReward()
-        if random.random() < p:
+        if random.random() < p and self.time <= task.getGoal().getDeadline():
             # task completed
             task.setCompleted(True)
             # self.completed_tasks.append(task), add this back later when needed ***
@@ -348,7 +348,21 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         Not available in reinforcement learning.
         """
-        abstract
+        reward = 0
+        task = self.todoTasks[action]
+        reward += task.getReward() # reward from doing a task
+        curr_time = state[1]
+        next_time = nextState[1]
+        next_tasks = nextState[0]
+        # reward (penalty) for missing a deadline during the time of the action
+        for goal in self.goals:
+            if curr_time <= goal.getDeadline() and goal.getDeadline() < next_time:
+                reward += goal.deadlinePenalty()
+            elif task.getGoal() is goal and next_time <= goal.getDeadline():
+                task_indices = goals_to_index_dict[goal]
+                if not 0 in [next_tasks[i] for i in task_indices]:
+                    reward += goal.getReward(next_time)
+        return reward
 
     def isTerminal(self, state):
         """
