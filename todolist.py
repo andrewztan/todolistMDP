@@ -237,12 +237,12 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         # create mapping of tasks to indices
         self.tasksDict = {}
         self.todoTasks = todolist.getTasks()
-        for i in range(len(todoTasks)):
-            task = todoTasks[i]
-            tasksDict[task] = i
+        for i in range(len(self.todoTasks)):
+            task = self.todoTasks[i]
+            self.tasksDict[task] = i
 
         # creating Goals and their corresponding tasks pointers
-        self.goals = todolist.getGoals()
+        self.goals = self.todolist.getGoals()
         self.goals_to_index_dict = {}
         for g in self.goals:
             task_indices = [self.tasksDict[task] for task in g.getTasks()]
