@@ -344,6 +344,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getReward(self, state, action, nextState):
         """
+        DONE 
+
         Get the reward for the state, action, nextState transition.
 
         Not available in reinforcement learning.
@@ -401,5 +403,7 @@ if __name__ == '__main__':
     ]
 
     my_list = ToDoList(goals, start_time=0, end_time=10)
-    my_list.printDebug()
+    mdp = ToDoListMDP(my_list)
+    print(mdp.getStartState)
+    # my_list.printDebug()
 
