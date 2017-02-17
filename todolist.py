@@ -23,6 +23,8 @@ class ToDoList():
         self.incompleted_tasks = [task for task in self.tasks if not task.isComplete()]
         # incompleted tasks attribute goes here ***
 
+        
+
         self.start_time = start_time
         self.end_time = end_time
 
@@ -118,6 +120,9 @@ class ToDoList():
         print("Completed Goals: " + str(self.completed_goals))
         print("Tasks: " + str(self.tasks))
         print("Completed Tasks: " + str(self.completed_tasks))
+
+
+
 
 
 class Goal():
@@ -232,9 +237,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         # create mapping of tasks to indices
         self.tasksDict = {}
         self.todoTasks = todolist.getTasks()
-        for i in range(len(self.todoTasks)):
-            task = self.todoTasks[i]
-            self.tasksDict[task] = i
+        for i in range(len(todoTasks)):
+            task = todoTasks[i]
+            tasksDict[task] = i
 
         # creating Goals and their corresponding tasks pointers
         self.goals = todolist.getGoals()
@@ -343,6 +348,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getReward(self, state, action, nextState):
         """
+        DONE 
+
         Get the reward for the state, action, nextState transition.
 
         Not available in reinforcement learning.
@@ -389,8 +396,14 @@ if __name__ == '__main__':
             Task("Task B1", 1), 
             Task("Task B2", 2), 
             Task("Task B3", 2)], 
-            {1: 10, 3: 5, 5: 1},
-            penalty=-100)
+            {1: 10, 6: 5, 9: 1},
+            penalty=-100),
+        Goal("Goal C", [
+            Task("Task C1", 1), 
+            Task("Task C2", 2), 
+            Task("Task C3", 3)], 
+            {1: 100, 6: 90, 15: 80},
+            penalty=-1000),
     ]
 
     my_list = ToDoList(goals, start_time=0, end_time=10)
@@ -399,6 +412,5 @@ if __name__ == '__main__':
     print("start state: " + str(start_state))
     print(mdp.getPossibleActions(start_state))
     print(mdp.getTransitionStatesAndProbs(start_state, 0))
-
     # my_list.printDebug()
 
