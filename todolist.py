@@ -269,7 +269,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def tasksToBinary(self, tasks):
         """
+        DONE 
 
+        Convert a list of Task objects to a bit vector with 1 being complete and 0 if not complete. 
         """
         binary_tasks = [1 if task.isComplete() else 0 for task in tasks]
         return binary_tasks
@@ -306,7 +308,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getTransitionStatesAndProbs(self, state, action):
         """
-        NOT DONE: CHECK COMPLETION OF GOAL
+        DONE
 
         Returns list of (nextState, prob) pairs
         representing the states reachable
