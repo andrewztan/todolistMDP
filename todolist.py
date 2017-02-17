@@ -335,10 +335,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
                     binary_tasks[task_index] = 1
 
         # state for not completing task
-        next_states_probs.append((binary_tasks, new_time), 1 - task.getProb())
+        next_states_probs.append(((binary_tasks, new_time), 1 - task.getProb()))
         # state for completing task
         binary_tasks[action] = 1
-        next_states_probs.append((binary_tasks, new_time), task.getProb())
+        next_states_probs.append(((binary_tasks, new_time), task.getProb()))
 
         return next_states_probs
 
@@ -404,6 +404,9 @@ if __name__ == '__main__':
 
     my_list = ToDoList(goals, start_time=0, end_time=10)
     mdp = ToDoListMDP(my_list)
-    print(mdp.getStartState)
+    start_state = mdp.getStartState()
+    print("start state: " + str(start_state))
+    print(mdp.getPossibleActions(start_state))
+    print(mdp.getTransitionStatesAndProbs(start_state, 0))
     # my_list.printDebug()
 
