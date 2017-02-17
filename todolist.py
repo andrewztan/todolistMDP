@@ -410,8 +410,8 @@ if __name__ == '__main__':
     mdp = ToDoListMDP(my_list)
     start_state = mdp.getStartState()
     print("start state: " + str(start_state))
-    print(mdp.getPossibleActions(start_state))
-    print(mdp.getTransitionStatesAndProbs(start_state, 0))
+    print("possible actions: " + str(mdp.getPossibleActions(start_state)))
+    print("transitions states and probs: " + str(mdp.getTransitionStatesAndProbs(start_state, 0)))
     # my_list.printDebug()
     
 
