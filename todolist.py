@@ -360,8 +360,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         next_time = nextState[1]
 
         flipped_indices = [y - x for x, y in zip(prev_tasks, next_tasks)]
-        print "prev:", prev_tasks
-        print "next:", next_tasks
         changed_indices = [i for i, x in enumerate(flipped_indices) if x == 1]
         changed_goals = set()
         for task_index in changed_indices:
