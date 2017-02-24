@@ -143,9 +143,14 @@ class Goal():
         t = next(val for x, val in enumerate(times) if val >= time)
         return self.reward[t]
 
+    # return rewards dictionary that maps time of completion to reward value
+    def getRewardDict(self):
+        return self.reward
+
     # return deadline time, does not do any computation, just return self.deadline
     def getDeadline(self):
         return self.deadline
+
 
     def deadlinePenalty(self):
         return self.penalty
@@ -243,6 +248,12 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
             task_indices = [self.tasksDict[task] for task in g.getTasks()]
             self.task_to_index[g] = task_indices
 
+        # create a list of deadline mappings (Do we need this if goal object has deadlines already?)
+        self.deadlineMaps = {goal: goal.getRewardDict() for goal in self.goals}
+
+        # create an initially empty set of inactive goals
+        self.inactiveGoals = set()
+
         # parameters
         self.livingReward = 0.0
         self.noise = 0.0
@@ -295,7 +306,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         Returns a list of indices
         """
         tasks = state[0]
-        possible_actions = [i for i, task in enumerate(tasks) if task == 0]
+        currentTime = state[1]
+        possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.todoTasks[i], currentTime+1))]
         return possible_actions
 
     def getTransitionStatesAndProbs(self, state, action):
@@ -382,8 +394,34 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         state as having a self-loop action 'pass' with zero reward; the formulations
         are equivalent.
         """
-        return not 0 in state[0] or state[1] > self.todolist.getEndtime()
+        currentTime = state[1]
+        endtimePassed = currentTime > self.todolist.getEndtime()   # check if the global deadline is reached
+        allGoalsCompleted = not 0 in state[0]                      # check if all the goals (or tasks) are completed
 
+        # check if the final deadlines of all goals have been passed
+        allDeadlinesPassed = True
+        for goal in self.goals:
+            if currentTime <= goal.getDeadline():
+                allDeadlinesPassed = False
+                break
+
+        return endtimePassed or allDeadlinesPassed or allGoalsCompleted
+
+    def isGoalActive(self, goal, time):
+        """
+        Given a Goal object and a time
+        Check if the goal is still active at that time 
+        """
+        active = time <= goal.getDeadline()
+        return active
+
+    def isTaskActive(self, task, time):
+        """
+        Given a Task object and a time
+        Check if the goal is still active at that time 
+        """
+        goal = task.getGoal()
+        return self.isGoalActive(goal, time)
 
 if __name__ == '__main__':
 
@@ -411,6 +449,7 @@ if __name__ == '__main__':
     my_list = ToDoList(goals, start_time=0, end_time=20)
     mdp = ToDoListMDP(my_list)
     start_state = mdp.getStartState()
+
     action = mdp.getPossibleActions(start_state)[0]
     curr_state = mdp.getTransitionStatesAndProbs(start_state, action)[0][0]
     print(curr_state)
@@ -433,4 +472,5 @@ if __name__ == '__main__':
     # print(mdp.getPossibleActions(start_state))
     # print(mdp.getTransitionStatesAndProbs(start_state, 0))
     # my_list.printDebug()
+    
 
