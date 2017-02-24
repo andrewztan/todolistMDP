@@ -239,7 +239,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.index_to_task = todolist.getTasks()
         for i in range(len(self.index_to_task)):
             task = self.index_to_task[i]
-            self.tasksDict[task] = i
+            self.task_to_index[task] = i
 
         # creating Goals and their corresponding tasks pointers
         self.goals = self.todolist.getGoals()
@@ -307,7 +307,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         tasks = state[0]
         currentTime = state[1]
-        possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.todoTasks[i], currentTime+1))]
+        possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
         return possible_actions
 
     def getTransitionStatesAndProbs(self, state, action):
@@ -367,13 +367,13 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         reward += task.getReward() 
 
         # reward for goal completion
-        if nextState[action] == 1:
-            if self.isGoalCompleted(goal, nextState) and self.isGoalActive(goal, new_time):
+        if next_tasks[action] == 1:
+            if self.isGoalCompleted(goal, nextState) and self.isGoalActive(goal, next_time):
                 reward += goal.getReward(next_time)
 
         # penalty for missing a deadline
         for goal in self.goals:
-            if self.isGoalActive(goal, prev_time) and not self.isGoalActive(goal, new_time):
+            if self.isGoalActive(goal, prev_time) and not self.isGoalActive(goal, next_time):
                 # if a deadline passed during time of action, add reward (penalty)
                 reward += goal.deadlinePenalty()
         
@@ -382,7 +382,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """ logic or old state representation
         # check deadlines
         for goal in self.goals:
-            if not self.isGoalActive(goal, new_time):
+            if not self.isGoalActive(goal, next_time):
                 # if a deadline passed, add reward (penalty) for missing a deadline during the time of the action
                 for task_index in self.task_to_index[goal]:
                     binary_tasks[task_index] = 1
@@ -422,9 +422,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
             return True   
         # check if there are any goals that are still active and not completed
         for goal in self.goals:
-            if isGoalActive(goal, time) and not isGoalCompleted(goal, state):
-                return True
-        return False
+            if self.isGoalActive(goal, time) and not self.isGoalCompleted(goal, state):
+                return False
+        return True
 
     def isGoalActive(self, goal, time):
         """
@@ -494,7 +494,6 @@ if __name__ == '__main__':
         print(next_state)
         print(mdp.getReward(curr_state, action, next_state))
         curr_state = next_state
-
 
 
 
