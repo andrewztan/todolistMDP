@@ -235,7 +235,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.start_state = self.getStartState()
 
         # create mapping of tasks to indices
-        self.tasksDict = {}
+        self.task_to_index = {}
         self.index_to_task = todolist.getTasks()
         for i in range(len(self.index_to_task)):
             task = self.index_to_task[i]
@@ -243,10 +243,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         # creating Goals and their corresponding tasks pointers
         self.goals = self.todolist.getGoals()
-        self.task_to_index = {}
+        self.goal_to_index = {}
         for g in self.goals:
-            task_indices = [self.tasksDict[task] for task in g.getTasks()]
-            self.task_to_index[g] = task_indices
+            task_indices = [self.task_to_index[task] for task in g.getTasks()]
+            self.goal_to_index[g] = task_indices
 
         # create a list of deadline mappings (Do we need this if goal object has deadlines already?)
         self.deadlineMaps = {goal: goal.getRewardDict() for goal in self.goals}
