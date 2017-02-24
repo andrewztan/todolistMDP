@@ -368,7 +368,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         # reward for goal completion
         if nextState[action] == 1:
-            if not 0 in self.goal_to_indices[goal] and self.isGoalActive(goal, new_time):
+            if self.isGoalCompleted(goal, nextState) and self.isGoalActive(goal, new_time):
                 reward += goal.getReward(next_time)
 
         # penalty for missing a deadline
@@ -405,7 +405,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
                 if not 0 in tasks:
                     reward += goal.getReward(next_time)
         """
-        
+
     def isTerminal(self, state):
         """
         DONE
@@ -416,26 +416,34 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         state as having a self-loop action 'pass' with zero reward; the formulations
         are equivalent.
         """
-        currentTime = state[1]
-        endtimePassed = currentTime > self.todolist.getEndtime()   # check if the global deadline is reached
-        allGoalsCompleted = not 0 in state[0]                      # check if all the goals (or tasks) are completed
-
-        # check if the final deadlines of all goals have been passed
-        allDeadlinesPassed = True
+        time = state[1]
+        # check if the global end time is reached
+        if time > self.todolist.getEndtime():
+            return True   
+        # check if there are any goals that are still active and not completed
         for goal in self.goals:
-            if currentTime <= goal.getDeadline():
-                allDeadlinesPassed = False
-                break
-
-        return endtimePassed or allDeadlinesPassed or allGoalsCompleted
+            if isGoalActive(goal, time) and not isGoalCompleted(goal, state):
+                return True
+        return False
 
     def isGoalActive(self, goal, time):
         """
         Given a Goal object and a time
-        Check if the goal is still active at that time 
+        Check if the goal is still active at that time
+        Note: completed goal is still considered active if time has not passed the deadline 
         """
         active = time <= goal.getDeadline()
         return active
+
+    def isGoalCompleted(self, goal, state):
+        """
+        Given a Goal object and current state
+        Check if the goal is completed 
+        """
+        tasks = state[0]
+        goal_indices = self.goal_to_indices[goal]
+        goal_tasks = [tasks[i] for i in goal_indices]
+        return not 0 in goal_tasks 
 
     def isTaskActive(self, task, time):
         """
