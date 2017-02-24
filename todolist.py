@@ -261,6 +261,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.livingReward = 0.0
         self.noise = 0.0
 
+    def getTasksList(self):
+        return self.index_to_task
+
     def setLivingReward(self, reward):
         """
         The (negative) reward for exiting "normal" states.
@@ -477,7 +480,7 @@ if __name__ == '__main__':
             Task("Task C1", 1), 
             Task("Task C2", 2), 
             Task("Task C3", 3)], 
-            {1: 100, 6: 90, 10: 80},
+            {1: 100, 6: 90, 20: 80},
             penalty=-1000),
     ]
 
@@ -554,7 +557,25 @@ if __name__ == '__main__':
 
         V_states = next_V_states
 
-    print(V_states)
+    # print(V_states)
+
+    start_state = (tuple([0 for _ in range(numTasks)]), 0)
+    state = start_state
+    optimal_tasks = []
+    while not mdp.isTerminal(state):
+        optimal_value = V_states[state][0]
+        optimal_action = V_states[state][1]
+        task = mdp.getTasksList()[optimal_action]
+        next_state_tasks = list(state[0])[:]
+        next_state_tasks[optimal_action] = 1
+        next_state = (tuple(next_state_tasks), state[1] + task.getTimeCost())
+        state = next_state
+        optimal_tasks.append(task)
+
+    print [task.getDescription() for task in optimal_tasks]
+
+
+
 
 
 
