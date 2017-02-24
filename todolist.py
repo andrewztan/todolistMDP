@@ -473,15 +473,15 @@ if __name__ == '__main__':
             Task("Task B3", 2)], 
             {1: 10, 6: 5, 9: 1},
             penalty=-100),
-        # Goal("Goal C", [
-        #     Task("Task C1", 1), 
-        #     Task("Task C2", 2), 
-        #     Task("Task C3", 3)], 
-        #     {1: 100, 6: 90, 10: 80},
-        #     penalty=-1000),
+        Goal("Goal C", [
+            Task("Task C1", 1), 
+            Task("Task C2", 2), 
+            Task("Task C3", 3)], 
+            {1: 100, 6: 90, 10: 80},
+            penalty=-1000),
     ]
 
-    end_time = 10
+    end_time = 20
     my_list = ToDoList(goals, start_time=0, end_time=end_time)
     mdp = ToDoListMDP(my_list)
     start_state = mdp.getStartState()
@@ -523,15 +523,16 @@ if __name__ == '__main__':
             prob = pair[1]
             next_state_value = V_states[next_state][0]
             total += prob * (mdp.getReward(state, action, next_state) + gamma * next_state_value)
-        print(total)
+        
         return total
-
+    print ""
     converged = False
     i = 0
     while not converged:
         print 'iteration', i
         i += 1
         next_V_states = {} 
+        converged = True
         for state in V_states:
             possible_actions = mdp.getPossibleActions(state)   
             best_action = None
@@ -548,9 +549,7 @@ if __name__ == '__main__':
 
             old_state_value = V_states[state][0]
             new_state_value = best_value
-            if abs(old_state_value - new_state_value) < 0.1:
-                converged = True
-            else: 
+            if abs(old_state_value - new_state_value) > 0.1:
                 converged = False
 
         V_states = next_V_states
