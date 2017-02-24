@@ -310,7 +310,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         tasks = state[0]
         currentTime = state[1]
-        possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
+        if currentTime < self.todolist.getEndtime(): 
+            possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
+        else:
+            possible_actions = []
         return possible_actions
 
     def getTransitionStatesAndProbs(self, state, action):
@@ -470,15 +473,15 @@ if __name__ == '__main__':
             Task("Task B3", 2)], 
             {1: 10, 6: 5, 9: 1},
             penalty=-100),
-        Goal("Goal C", [
-            Task("Task C1", 1), 
-            Task("Task C2", 2), 
-            Task("Task C3", 3)], 
-            {1: 100, 6: 90, 10: 80},
-            penalty=-1000),
+        # Goal("Goal C", [
+        #     Task("Task C1", 1), 
+        #     Task("Task C2", 2), 
+        #     Task("Task C3", 3)], 
+        #     {1: 100, 6: 90, 10: 80},
+        #     penalty=-1000),
     ]
 
-    end_time = 20
+    end_time = 10
     my_list = ToDoList(goals, start_time=0, end_time=end_time)
     mdp = ToDoListMDP(my_list)
     start_state = mdp.getStartState()
@@ -501,8 +504,9 @@ if __name__ == '__main__':
 
     # create every single state possible
     numTasks = len(my_list.getTasks())
+    biggestTimeCost = max([task.getTimeCost() for task in my_list.getTasks()])
     V_states = {}
-    for t in range(end_time):
+    for t in range(end_time+biggestTimeCost):
         bit_vectors = list(itertools.product([0, 1], repeat=numTasks))
         for bv in bit_vectors:
             # bv = list(bv)
@@ -521,9 +525,12 @@ if __name__ == '__main__':
             total += prob * (mdp.getReward(state, action, next_state) + gamma * next_state_value)
         print(total)
         return total
-    print
-    s = 1000
-    for k in range(s):
+
+    converged = False
+    i = 0
+    while not converged:
+        print 'iteration', i
+        i += 1
         next_V_states = {} 
         for state in V_states:
             possible_actions = mdp.getPossibleActions(state)   
@@ -535,11 +542,20 @@ if __name__ == '__main__':
                 if value > best_value:
                     best_value = value
                     best_action = a
-            next_V_states[state] = (best_value, a)
+            if len(possible_actions) == 0:
+                best_value = 0
+            next_V_states[state] = (best_value, best_action)
+
+            old_state_value = V_states[state][0]
+            new_state_value = best_value
+            if abs(old_state_value - new_state_value) < 0.1:
+                converged = True
+            else: 
+                converged = False
 
         V_states = next_V_states
 
-    # print(V_states)
+    print(V_states)
 
 
 
