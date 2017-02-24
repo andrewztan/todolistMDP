@@ -23,8 +23,6 @@ class ToDoList():
         self.incompleted_tasks = [task for task in self.tasks if not task.isComplete()]
         # incompleted tasks attribute goes here ***
 
-        
-
         self.start_time = start_time
         self.end_time = end_time
 
@@ -120,9 +118,6 @@ class ToDoList():
         print("Completed Goals: " + str(self.completed_goals))
         print("Tasks: " + str(self.tasks))
         print("Completed Tasks: " + str(self.completed_tasks))
-
-
-
 
 
 class Goal():
@@ -236,17 +231,17 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         # create mapping of tasks to indices
         self.tasksDict = {}
-        self.todoTasks = todolist.getTasks()
-        for i in range(len(self.todoTasks)):
-            task = self.todoTasks[i]
+        self.index_to_task = todolist.getTasks()
+        for i in range(len(self.index_to_task)):
+            task = self.index_to_task[i]
             self.tasksDict[task] = i
 
         # creating Goals and their corresponding tasks pointers
         self.goals = self.todolist.getGoals()
-        self.goals_to_index_dict = {}
+        self.task_to_index = {}
         for g in self.goals:
             task_indices = [self.tasksDict[task] for task in g.getTasks()]
-            self.goals_to_index_dict[g] = task_indices
+            self.task_to_index[g] = task_indices
 
         # parameters
         self.livingReward = 0.0
@@ -319,7 +314,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         next_states_probs = []
 
         # action is the index that is passed in 
-        task = self.todoTasks[action]
+        task = self.index_to_task[action]
 
         binary_tasks = state[0][:]
         new_time = state[1] + task.getTimeCost()
@@ -328,7 +323,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         for goal in self.goals:
             if new_time > goal.getDeadline():
                 # if a deadline passed, mark all tasks as completed (1)
-                for task_index in self.goals_to_index_dict[goal]:
+                for task_index in self.task_to_index[goal]:
                     binary_tasks[task_index] = 1
 
         # state for not completing task
@@ -352,7 +347,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         Not available in reinforcement learning.
         """
         reward = 0
-        task = self.todoTasks[action]
+        task = self.index_to_task[action]
         reward += task.getReward() # reward from doing a task
         prev_tasks = state[0]
         prev_time = state[1]
@@ -363,12 +358,12 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         changed_indices = [i for i, x in enumerate(flipped_indices) if x == 1]
         changed_goals = set()
         for task_index in changed_indices:
-            t = self.todoTasks[task_index]
+            t = self.index_to_task[task_index]
             changed_goals.add(t.getGoal())
         print "changed indices:", changed_indices
         # reward (penalty) for missing a deadline during the time of the action
         for goal in changed_goals:
-            task_indices = self.goals_to_index_dict[goal]
+            task_indices = self.task_to_index[goal]
             tasks = [next_tasks[i] for i in task_indices]
             if prev_time <= goal.getDeadline() and goal.getDeadline() < next_time:
                 reward += goal.deadlinePenalty()
@@ -409,7 +404,7 @@ if __name__ == '__main__':
             Task("Task C1", 1), 
             Task("Task C2", 2), 
             Task("Task C3", 3)], 
-            {1: 100, 6: 90, 13: 80},
+            {1: 100, 6: 90, 10: 80},
             penalty=-1000),
     ]
 
