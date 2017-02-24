@@ -148,9 +148,14 @@ class Goal():
         t = next(val for x, val in enumerate(times) if val >= time)
         return self.reward[t]
 
+    # return rewards dictionary that maps time of completion to reward value
+    def getRewardDict(self):
+        return self.reward
+
     # return deadline time, does not do any computation, just return self.deadline
     def getDeadline(self):
         return self.deadline
+
 
     def deadlinePenalty(self):
         return self.penalty
@@ -247,6 +252,12 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         for g in self.goals:
             task_indices = [self.tasksDict[task] for task in g.getTasks()]
             self.goals_to_index_dict[g] = task_indices
+
+        # create a list of deadline mappings (Do we need this if goal object has deadlines already?)
+        self.deadlineMaps = {goal: goal.getRewardDict() for goal in self.goals}
+
+        # create an initially empty set of inactive goals
+        self.inactiveGoals = set()
 
         # parameters
         self.livingReward = 0.0
@@ -387,7 +398,18 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         state as having a self-loop action 'pass' with zero reward; the formulations
         are equivalent.
         """
-        return not 0 in state[0] or state[1] > self.todolist.getEndtime()
+        currentTime = state[1]
+        endtimePassed = currentTime > self.todolist.getEndtime()   # check if the global deadline is reached
+        allGoalsCompleted = not 0 in state[0]                      # check if all the goals (or tasks) are completed
+
+        # check if the final deadlines of all goals have been passed
+        allDeadlinesPassed = True
+        for goal in self.goals:
+            if currentTime <= goal.getDeadline():
+                allDeadlinesPassed = False
+                break
+
+        return endtimePassed or allDeadlinesPassed or allGoalsCompleted
 
 
 if __name__ == '__main__':
