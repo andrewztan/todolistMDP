@@ -311,7 +311,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         Returns a list of indices
         """
         tasks = state[0]
-        possible_actions = [i for i, task in enumerate(tasks) if task == 0]
+        currentTime = state[1]
+        possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.todoTasks[i], currentTime+1))]
         return possible_actions
 
     def getTransitionStatesAndProbs(self, state, action):
@@ -411,6 +412,21 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         return endtimePassed or allDeadlinesPassed or allGoalsCompleted
 
+    def isGoalActive(self, goal, time):
+        """
+        Given a Goal object and a time
+        Check if the goal is still active at that time 
+        """
+        active = time <= goal.getDeadline()
+        return active
+
+    def isTaskActive(self, task, time):
+        """
+        Given a Task object and a time
+        Check if the goal is still active at that time 
+        """
+        goal = task.getGoal()
+        return self.isGoalActive(goal, time)
 
 if __name__ == '__main__':
 
