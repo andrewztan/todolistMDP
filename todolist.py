@@ -4,6 +4,9 @@ import mdp
 # import environment
 import util
 # import optparse
+import itertools
+import math
+import numpy as np
 
 class ToDoList():
     """
@@ -327,8 +330,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         # action is the index that is passed in 
         task = self.index_to_task[action]
-
-        binary_tasks = state[0][:]
+        binary_tasks = list(state[0])[:]
         new_time = state[1] + task.getTimeCost()
 
         # state for not completing task
@@ -476,7 +478,8 @@ if __name__ == '__main__':
             penalty=-1000),
     ]
 
-    my_list = ToDoList(goals, start_time=0, end_time=20)
+    end_time = 20
+    my_list = ToDoList(goals, start_time=0, end_time=end_time)
     mdp = ToDoListMDP(my_list)
     start_state = mdp.getStartState()
 
@@ -490,10 +493,58 @@ if __name__ == '__main__':
     print(mdp.getReward(start_state, action, curr_state))
     while not mdp.isTerminal(curr_state):
         action = mdp.getPossibleActions(curr_state)[0]
-        next_state = mdp.getTransitionStatesAndProbs(curr_state, action)[0][0]
-        print(next_state)
+        transStatesAndProbs = mdp.getTransitionStatesAndProbs(curr_state, action)
+        print(transStatesAndProbs)
+        next_state = transStatesAndProbs[0][0]
         print(mdp.getReward(curr_state, action, next_state))
         curr_state = next_state
+
+    # create every single state possible
+    numTasks = len(my_list.getTasks())
+    V_states = {}
+    for t in range(end_time):
+        bit_vectors = list(itertools.product([0, 1], repeat=numTasks))
+        for bv in bit_vectors:
+            # bv = list(bv)
+            state = (bv, t)
+            V_states[state] = (0, None)
+
+    # # perform value iteration with s iterations
+    gamma = 1.0
+
+    def sumTransitionStates(mdp, state, action, trans_states_and_probs, V_states):
+        total = 0
+        for pair in trans_states_and_probs:
+            next_state = (tuple(pair[0][0]), pair[0][1])
+            prob = pair[1]
+            next_state_value = V_states[next_state][0]
+            total += prob * (mdp.getReward(state, action, next_state) + gamma * next_state_value)
+        print(total)
+        return total
+    print
+    s = 1000
+    for k in range(s):
+        next_V_states = {} 
+        for state in V_states:
+            possible_actions = mdp.getPossibleActions(state)   
+            best_action = None
+            best_value = -float('inf')
+            for a in possible_actions:
+                trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, a)
+                value = sumTransitionStates(mdp, state, a, trans_states_and_probs, V_states)
+                if value > best_value:
+                    best_value = value
+                    best_action = a
+            next_V_states[state] = (best_value, a)
+
+        V_states = next_V_states
+
+    # print(V_states)
+
+
+
+
+
 
 
 
