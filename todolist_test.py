@@ -27,16 +27,16 @@ if __name__ == '__main__':
     # next_state = mdp.getTransitionStatesAndProbs(next_state, action)[0][0]
     # print(next_state)
 
-    print(mdp.getReward(start_state, action, curr_state))
-    while not mdp.isTerminal(curr_state):
-        print curr_state
-        print "Possible Actions:", mdp.getPossibleActions(curr_state)
-        action = mdp.getPossibleActions(curr_state)[0]
-        transStatesAndProbs = mdp.getTransitionStatesAndProbs(curr_state, action)
-        # print(transStatesAndProbs)
-        next_state = transStatesAndProbs[0][0]
-        print(mdp.getReward(curr_state, action, next_state))
-        curr_state = next_state
+    # print(mdp.getReward(start_state, action, curr_state))
+    # while not mdp.isTerminal(curr_state):
+    #     print curr_state
+    #     print "Possible Actions:", mdp.getPossibleActions(curr_state)
+    #     action = mdp.getPossibleActions(curr_state)[0]
+    #     transStatesAndProbs = mdp.getTransitionStatesAndProbs(curr_state, action)
+    #     # print(transStatesAndProbs)
+    #     next_state = transStatesAndProbs[0][0]
+    #     print(mdp.getReward(curr_state, action, next_state))
+    #     curr_state = next_state
 
     # create every single state possible
     numTasks = len(my_list.getTasks())

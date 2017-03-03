@@ -315,6 +315,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         currentTime = state[1]
         if currentTime < self.todolist.getEndTime(): 
             possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
+            # possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime + self.index_to_task[i].getTimeCost()))]
         else:
             possible_actions = []
         return possible_actions
