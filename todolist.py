@@ -314,7 +314,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         tasks = state[0]
         currentTime = state[1]
         if currentTime < self.todolist.getEndtime(): 
-            possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
+            # checks if task is incomplete, currently active, and won't go past the deadline. 
+            possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime+self.index_to_task[i].getTimeCost()))]
         else:
             possible_actions = []
         return possible_actions
@@ -440,7 +441,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         Check if the goal is still active at that time
         Note: completed goal is still considered active if time has not passed the deadline 
         """
-        active = time <= goal.getDeadline()
+        active = time <= goal.getDeadline() and time <= self.todolist.getEndtime()
         return active
 
     def isGoalCompleted(self, goal, state):
@@ -466,21 +467,13 @@ if __name__ == '__main__':
     goals = [
         Goal("Goal A", [
             Task("Task A1", 1), 
-            Task("Task A2", 1), 
-            Task("Task A3", 1)], 
-            {1: 14, 3: 10, 5: 8},
+            Task("Task A2", 2)], 
+            {1: 140, 3: 100, 7: 80},
             penalty=-10),
         Goal("Goal B", [
-            Task("Task B1", 1), 
-            Task("Task B2", 2), 
+            Task("Task B1", 2),  
             Task("Task B3", 2)], 
-            {1: 10, 6: 5, 9: 1},
-            penalty=-100),
-        Goal("Goal C", [
-            Task("Task C1", 1), 
-            Task("Task C2", 2), 
-            Task("Task C3", 3)], 
-            {1: 100, 6: 90, 20: 80},
+            {1: 10, 3: 9, 4: 8},
             penalty=-1000),
     ]
 
@@ -496,14 +489,14 @@ if __name__ == '__main__':
     # next_state = mdp.getTransitionStatesAndProbs(next_state, action)[0][0]
     # print(next_state)
 
-    print(mdp.getReward(start_state, action, curr_state))
-    while not mdp.isTerminal(curr_state):
-        action = mdp.getPossibleActions(curr_state)[0]
-        transStatesAndProbs = mdp.getTransitionStatesAndProbs(curr_state, action)
-        print(transStatesAndProbs)
-        next_state = transStatesAndProbs[0][0]
-        print(mdp.getReward(curr_state, action, next_state))
-        curr_state = next_state
+    # print(mdp.getReward(start_state, action, curr_state))
+    # while not mdp.isTerminal(curr_state):
+    #     action = mdp.getPossibleActions(curr_state)[0]
+    #     transStatesAndProbs = mdp.getTransitionStatesAndProbs(curr_state, action)
+    #     print(transStatesAndProbs)
+    #     next_state = transStatesAndProbs[0][0]
+    #     print(mdp.getReward(curr_state, action, next_state))
+    #     curr_state = next_state
 
     # create every single state possible
     numTasks = len(my_list.getTasks())
@@ -565,6 +558,7 @@ if __name__ == '__main__':
     while not mdp.isTerminal(state):
         optimal_value = V_states[state][0]
         optimal_action = V_states[state][1]
+        print "opt action", optimal_action
         task = mdp.getTasksList()[optimal_action]
         next_state_tasks = list(state[0])[:]
         next_state_tasks[optimal_action] = 1
@@ -588,5 +582,8 @@ if __name__ == '__main__':
     # print(mdp.getPossibleActions(start_state))
     # print(mdp.getTransitionStatesAndProbs(start_state, 0))
     # my_list.printDebug()
+
+
+
     
 
