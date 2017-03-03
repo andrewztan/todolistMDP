@@ -11,8 +11,8 @@ if __name__ == '__main__':
         Goal("Goal B", [
             Task("Task B1", 1),  
             Task("Task B2", 1)], 
-            {1: 10, 2: 1},
-            penalty=-90),
+            {2: 10},
+            penalty=-90000),
     ]
 
     end_time = 20
