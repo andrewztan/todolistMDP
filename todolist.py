@@ -545,20 +545,19 @@ if __name__ == '__main__':
 
             old_state_value = V_states[state][0]
             new_state_value = best_value
-            if abs(old_state_value - new_state_value) > 0.1:
+            if abs(old_state_value - new_state_value) > 0.0001:
                 converged = False
 
         V_states = next_V_states
-
-    # print(V_states)
 
     start_state = (tuple([0 for _ in range(numTasks)]), 0)
     state = start_state
     optimal_tasks = []
     while not mdp.isTerminal(state):
+        print state
         optimal_value = V_states[state][0]
         optimal_action = V_states[state][1]
-        print "opt action", optimal_action
+        
         task = mdp.getTasksList()[optimal_action]
         next_state_tasks = list(state[0])[:]
         next_state_tasks[optimal_action] = 1
