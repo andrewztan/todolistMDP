@@ -97,7 +97,7 @@ class ToDoList():
     def getTime(self):
         return self.time
 
-    def getEndtime(self):
+    def getEndTime(self):
         return self.end_time
 
     def getTasks(self):
@@ -313,7 +313,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         tasks = state[0]
         currentTime = state[1]
-        if currentTime < self.todolist.getEndtime(): 
+        if currentTime < self.todolist.getEndTime(): 
             possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
         else:
             possible_actions = []
@@ -426,7 +426,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         time = state[1]
         # check if the global end time is reached
-        if time > self.todolist.getEndtime():
+        if time > self.todolist.getEndTime():
             return True   
         # check if there are any goals that are still active and not completed
         for goal in self.goals:
@@ -440,7 +440,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         Check if the goal is still active at that time
         Note: completed goal is still considered active if time has not passed the deadline 
         """
-        active = time <= goal.getDeadline() and time <= self.todolist.getEndtime()
+        active = time <= goal.getDeadline() and time <= self.todolist.getEndTime()
         return active
 
     def isGoalCompleted(self, goal, state):
@@ -460,4 +460,3 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         goal = task.getGoal()
         return self.isGoalActive(goal, time)
-
