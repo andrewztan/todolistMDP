@@ -22,16 +22,18 @@ if __name__ == '__main__':
 
     action = mdp.getPossibleActions(start_state)[0]
     curr_state = mdp.getTransitionStatesAndProbs(start_state, action)[0][0]
-    print(curr_state)
+    
     # action = mdp.getPossibleActions(next_state)[3]
     # next_state = mdp.getTransitionStatesAndProbs(next_state, action)[0][0]
     # print(next_state)
 
     print(mdp.getReward(start_state, action, curr_state))
     while not mdp.isTerminal(curr_state):
+        print curr_state
+        print "Possible Actions:", mdp.getPossibleActions(curr_state)
         action = mdp.getPossibleActions(curr_state)[0]
         transStatesAndProbs = mdp.getTransitionStatesAndProbs(curr_state, action)
-        print(transStatesAndProbs)
+        # print(transStatesAndProbs)
         next_state = transStatesAndProbs[0][0]
         print(mdp.getReward(curr_state, action, next_state))
         curr_state = next_state
@@ -50,12 +52,12 @@ if __name__ == '__main__':
     # perform value iteration with s iterations
     gamma = 1.0
 
-    def sumTransitionStates(mdp, state, action, trans_states_and_probs, V_states):
+    def sumTransitionStates(mdp, state, action, trans_states_and_probs, states):
         total = 0
         for pair in trans_states_and_probs:
             next_state = (tuple(pair[0][0]), pair[0][1])
             prob = pair[1]
-            next_state_value = V_states[next_state][0]
+            next_state_value = states[next_state][0]
             total += prob * (mdp.getReward(state, action, next_state) + gamma * next_state_value)
         return total
     print ""
@@ -66,13 +68,13 @@ if __name__ == '__main__':
         i += 1
         next_V_states = {} 
         converged = True
-        for state in V_states:
+        for state in states:
             possible_actions = mdp.getPossibleActions(state)   
             best_action = None
             best_value = -float('inf')
             for a in possible_actions:
                 trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, a)
-                value = sumTransitionStates(mdp, state, a, trans_states_and_probs, V_states)
+                value = sumTransitionStates(mdp, state, a, trans_states_and_probs, states)
                 if value > best_value:
                     best_value = value
                     best_action = a
@@ -80,21 +82,21 @@ if __name__ == '__main__':
                 best_value = 0
             next_V_states[state] = (best_value, best_action)
 
-            old_state_value = V_states[state][0]
+            old_state_value = states[state][0]
             new_state_value = best_value
             if abs(old_state_value - new_state_value) > 0.1:
                 converged = False
 
-        V_states = next_V_states
+        states = next_V_states
 
-    # print(V_states)
+    # print(states)
 
     start_state = (tuple([0 for _ in range(numTasks)]), 0)
     state = start_state
     optimal_tasks = []
     while not mdp.isTerminal(state):
-        optimal_value = V_states[state][0]
-        optimal_action = V_states[state][1]
+        optimal_value = states[state][0]
+        optimal_action = states[state][1]
         print "opt action", optimal_action
         task = mdp.getTasksList()[optimal_action]
         next_state_tasks = list(state[0])[:]
