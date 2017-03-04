@@ -285,7 +285,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         Convert a list of Task objects to a bit vector with 1 being complete and 0 if not complete. 
         """
-        binary_tasks = [1 if task.isComplete() else 0 for task in tasks]
+        binary_tasks = tuple([1 if task.isComplete() else 0 for task in tasks])
         return binary_tasks
 
     def getStates(self):
@@ -338,23 +338,18 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         # action is the index that is passed in 
         task = self.index_to_task[action]
-        binary_tasks = list(state[0])[:]
+        binary_tasks = list(state[0])[:] # make a modifiable copy of tasks
         new_time = state[1] + task.getTimeCost()
 
-        # if task / goal is still active after performing the task
-        if self.isTaskActive(task, new_time):
-            # state for not completing task
-            tasks_with_no_completion = binary_tasks[:]
-            if 1 - task.getProb() > 0:
-                next_states_probs.append(((tasks_with_no_completion, new_time), 1 - task.getProb()))
-            # state for completing task
-            tasks_with_completion = binary_tasks[:]
-            tasks_with_completion[action] = 1
-            if task.getProb() > 0:
-                next_states_probs.append(((tasks_with_completion, new_time), task.getProb()))
-        else:
-            tasks_with_no_completion = binary_tasks[:]
-            next_states_probs.append(((tasks_with_no_completion, new_time), 1))
+        # state for not completing task
+        tasks_no_completion = binary_tasks[:]
+        if 1 - task.getProb() > 0:
+            next_states_probs.append(((tuple(tasks_no_completion), new_time), 1 - task.getProb()))
+        # state for completing task
+        tasks_completion = binary_tasks[:]
+        tasks_completion[action] = 1
+        if task.getProb() > 0:
+            next_states_probs.append(((tuple(tasks_completion), new_time), task.getProb()))
 
         return next_states_probs
 

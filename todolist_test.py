@@ -58,93 +58,91 @@ if __name__ == '__main__':
 
     # create every single state possible
 
+    print mdp.getPossibleActions(((1, 0), 1))
+    print mdp.getTransitionStatesAndProbs(((1, 0), 1), 1)
+    print mdp.getReward(((1, 0), 1), 1, ((1, 1), 2))
 
-    print mdp.getReward(([1, 0], 1), 0, ([1, 1], 2))
+    numTasks = len(my_list.getTasks())
+    V_states = {}
+    for t in range(end_time + 1):
+        bit_vectors = list(itertools.product([0, 1], repeat=numTasks))
+        # print bit_vectors
+        for bv in bit_vectors:
+            # bv = list(bv)
+            state = (bv, t)
+            V_states[state] = (0, None)
 
-    # numTasks = len(my_list.getTasks())
-    # V_states = {}
-    # for t in range(end_time + 1):
-    #     bit_vectors = list(itertools.product([0, 1], repeat=numTasks))
-    #     # print bit_vectors
-    #     for bv in bit_vectors:
-    #         # bv = list(bv)
-    #         state = (bv, t)
-    #         V_states[state] = (0, None)
+    # perform value iteration with s iterations
+    gamma = 1.0
 
+    def sumTransitionStates(mdp, state, action, V_states):
+        total = 0
+        trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
+        for pair in trans_states_and_probs:
+            next_state = pair[0]
+            tasks = next_state[0]
+            time = next_state[1]
+            prob = pair[1]
+            # print pair
+            # print tasks
+            # next_state = (tuple(tasks), time)
+            # print next_state
+            next_state_value = V_states[next_state][0]
+            total += prob * (mdp.getReward(state, action, next_state) + gamma * next_state_value)
+        # print total
+        return total
 
-    # # perform value iteration with s iterations
-    # gamma = 1.0
+    converged = False
+    i = 0
+    print V_states
+    while not converged:
+        print 'iteration', i
+        i += 1
+        next_V_states = {} 
+        converged = True
+        for state in V_states:
+            # print state
+            possible_actions = mdp.getPossibleActions(state)   
+            best_action = None
+            best_value = -float('inf')
+            if len(possible_actions) == 0:
+                best_value = 0
+                # continue
+            for a in possible_actions:
+                value = sumTransitionStates(mdp, state, a, V_states)
+                # print value
+                if value > best_value:
+                    best_value = value
+                    best_action = a
+            # print "state", state
+            # print "value", best_value
+            # print "policy", best_action
+            next_V_states[state] = (best_value, best_action)
 
-    # def sumTransitionStates(mdp, state, action, V_states):
-    #     total = 0
-    #     trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
-    #     for pair in trans_states_and_probs:
-    #         state = pair[0]
-    #         tasks = state[0]
-    #         time = state[1]
-    #         prob = pair[1]
-    #         # print pair
-    #         # print tasks
-    #         next_state = (tuple(tasks), time)
-    #         # print next_state
-    #         next_state_value = V_states[next_state][0]
-    #         total += prob * (mdp.getReward(state, action, next_state) + gamma * next_state_value)
-    #     print total
-    #     return total
+            old_state_value = V_states[state][0]
+            new_state_value = best_value
+            if abs(old_state_value - new_state_value) > 0.1:
+                converged = False
+        V_states = next_V_states
+        # print V_states
 
-    # converged = False
-    # i = 0
-    # print V_states
-    # while not converged:
-    #     print 'iteration', i
-    #     i += 1
-    #     next_V_states = {} 
-    #     converged = True
-    #     for state in V_states:
-    #         possible_actions = mdp.getPossibleActions(state)   
-    #         best_action = None
-    #         best_value = -float('inf')
-    #         if len(possible_actions) == 0:
-    #             best_value = 0
-    #             # continue
-    #         for a in possible_actions:
-    #             value = sumTransitionStates(mdp, state, a, V_states)
-    #             if value > best_value:
-    #                 best_value = value
-    #                 best_action = a
-    #         # print "state", state
-    #         # print "value", best_value
-    #         # print "policy", best_action
-    #         next_V_states[state] = (best_value, best_action)
+    # print(V_states)
 
-    #         old_state_value = V_states[state][0]
-    #         new_state_value = best_value
-    #         if abs(old_state_value - new_state_value) > 0.1:
-    #             converged = False
-    #     V_states = next_V_states
-    #     print V_states
+    start_state = (tuple([0 for _ in range(numTasks)]), 0)
+    state = start_state
+    optimal_tasks = []
+    while not mdp.isTerminal(state):
+        optimal_value = V_states[state][0]
+        optimal_action = V_states[state][1]
+        print "opt action", optimal_action
+        task = mdp.getTasksList()[optimal_action]
+        next_state_tasks = list(state[0])[:]
+        next_state_tasks[optimal_action] = 1
+        next_state = (tuple(next_state_tasks), state[1] + task.getTimeCost())
+        state = next_state
+        optimal_tasks.append(task)
 
-    # # print(V_states)
-
-    # start_state = (tuple([0 for _ in range(numTasks)]), 0)
-    # state = start_state
-    # optimal_tasks = []
-    # while not mdp.isTerminal(state):
-    #     optimal_value = V_states[state][0]
-    #     optimal_action = V_states[state][1]
-    #     print "opt action", optimal_action
-    #     task = mdp.getTasksList()[optimal_action]
-    #     next_state_tasks = list(state[0])[:]
-    #     next_state_tasks[optimal_action] = 1
-    #     next_state = (tuple(next_state_tasks), state[1] + task.getTimeCost())
-    #     state = next_state
-    #     optimal_tasks.append(task)
-
-    # print [task.getDescription() for task in optimal_tasks]
-
-
-
-
+    print [task.getDescription() for task in optimal_tasks]
 
 
 
@@ -152,9 +150,13 @@ if __name__ == '__main__':
 
 
 
-    # # print("start state: " + str(start_state))
-    # # print(mdp.getPossibleActions(start_state))
-    # # print(mdp.getTransitionStatesAndProbs(start_state, 0))
-    # # my_list.printDebug()
+
+
+
+
+    # print("start state: " + str(start_state))
+    # print(mdp.getPossibleActions(start_state))
+    # print(mdp.getTransitionStatesAndProbs(start_state, 0))
+    # my_list.printDebug()
     
 
