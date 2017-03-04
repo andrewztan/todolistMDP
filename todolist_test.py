@@ -7,7 +7,7 @@ if __name__ == '__main__':
             # Task("Task A1", 1), 
             Task("Task A1", 1)], 
             {1: 100},
-            penalty=-10),
+            penalty=-10000),
         Goal("Goal B", [
             Task("Task B1", 1),  
             Task("Task B2", 1)], 
