@@ -285,7 +285,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         Convert a list of Task objects to a bit vector with 1 being complete and 0 if not complete. 
         """
-        binary_tasks = [1 if task.isComplete() else 0 for task in tasks]
+        binary_tasks = tuple([1 if task.isComplete() else 0 for task in tasks])
         return binary_tasks
 
     def getStates(self):
@@ -313,9 +313,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         tasks = state[0]
         currentTime = state[1]
-        if currentTime < self.todolist.getEndTime(): 
-            possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
+        if currentTime <= self.todolist.getEndTime(): 
+            # possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
             # possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime + self.index_to_task[i].getTimeCost()))]
+            possible_actions = [i for i, task in enumerate(tasks) if task == 0]
         else:
             possible_actions = []
         return possible_actions
@@ -337,18 +338,21 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         # action is the index that is passed in 
         task = self.index_to_task[action]
-        binary_tasks = list(state[0])[:]
+        binary_tasks = list(state[0])[:] # make a modifiable copy of tasks
         new_time = state[1] + task.getTimeCost()
 
+        if new_time > self.todolist.getEndTime():
+            new_time = self.todolist.getEndTime() + 1
+
         # state for not completing task
-        tasks_with_no_completion = binary_tasks[:]
+        tasks_no_completion = binary_tasks[:]
         if 1 - task.getProb() > 0:
-            next_states_probs.append(((tasks_with_no_completion, new_time), 1 - task.getProb()))
+            next_states_probs.append(((tuple(tasks_no_completion), new_time), 1 - task.getProb()))
         # state for completing task
-        tasks_with_completion = binary_tasks[:]
-        tasks_with_completion[action] = 1
+        tasks_completion = binary_tasks[:]
+        tasks_completion[action] = 1
         if task.getProb() > 0:
-            next_states_probs.append(((tasks_with_completion, new_time), task.getProb()))
+            next_states_probs.append(((tuple(tasks_completion), new_time), task.getProb()))
 
         return next_states_probs
 
@@ -363,7 +367,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         Not available in reinforcement learning.
         """
-
         reward = 0
         task = self.index_to_task[action]
         goal = task.getGoal()
@@ -382,7 +385,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         # penalty for missing a deadline
         for goal in self.goals:
-            if self.isGoalActive(goal, prev_time) and not self.isGoalActive(goal, next_time):
+            if not self.isGoalCompleted(goal, state) and self.isGoalActive(goal, prev_time) and not self.isGoalActive(goal, next_time):
                 # if a deadline passed during time of action, add reward (penalty)
                 reward += goal.deadlinePenalty()
         
@@ -461,3 +464,4 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         goal = task.getGoal()
         return self.isGoalActive(goal, time)
+
