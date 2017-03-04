@@ -24,8 +24,8 @@ if __name__ == '__main__':
         Goal("Goal B", [
             Task("Task B1", 2),  
             Task("Task B2", 2)], 
-            {1: 10, 2: 1},
-            penalty=-90),
+            {1: 10, 10: 1},
+            penalty=-1000),
         Goal("Goal C", [
             Task("Task C1", 3),  
             Task("Task C2", 3)], 
@@ -33,8 +33,8 @@ if __name__ == '__main__':
             penalty=-10000)
     ]
 
-    end_time = 3
-    my_list = ToDoList(goals, start_time=0, end_time=end_time)
+    end_time = 10
+    my_list = ToDoList(goals2, start_time=0, end_time=end_time)
     mdp = ToDoListMDP(my_list)
     start_state = mdp.getStartState()
 
@@ -58,13 +58,13 @@ if __name__ == '__main__':
 
     # create every single state possible
 
-    print mdp.getPossibleActions(((1, 0), 1))
-    print mdp.getTransitionStatesAndProbs(((1, 0), 1), 1)
-    print mdp.getReward(((1, 0), 1), 1, ((1, 1), 2))
+    # print mdp.getPossibleActions(((1, 0), 1))
+    # print mdp.getTransitionStatesAndProbs(((1, 0), 1), 1)
+    # print mdp.getReward(((1, 0), 1), 1, ((1, 1), 2))
 
     numTasks = len(my_list.getTasks())
     V_states = {}
-    for t in range(end_time + 1):
+    for t in range(end_time + 2):
         bit_vectors = list(itertools.product([0, 1], repeat=numTasks))
         # print bit_vectors
         for bv in bit_vectors:

@@ -313,7 +313,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         tasks = state[0]
         currentTime = state[1]
-        if currentTime < self.todolist.getEndTime(): 
+        if currentTime <= self.todolist.getEndTime(): 
             # possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
             # possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime + self.index_to_task[i].getTimeCost()))]
             possible_actions = [i for i, task in enumerate(tasks) if task == 0]
@@ -340,6 +340,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         task = self.index_to_task[action]
         binary_tasks = list(state[0])[:] # make a modifiable copy of tasks
         new_time = state[1] + task.getTimeCost()
+
+        if new_time > self.todolist.getEndTime():
+            new_time = self.todolist.getEndTime() + 1
 
         # state for not completing task
         tasks_no_completion = binary_tasks[:]
