@@ -25,16 +25,16 @@ if __name__ == '__main__':
         Goal("Goal B", [
             Task("Task B1", 2),  
             Task("Task B2", 2)], 
-            {1: 10, 10: 1},
-            penalty=-1000),
+            {1: 10, 10: 10},
+            penalty=0),
         Goal("Goal C", [
             Task("Task C1", 3),  
             Task("Task C2", 3)], 
-            {1: 10, 6: 1},
-            penalty=-10000)
+            {1: 10, 6: 100},
+            penalty=-1)
     ]
 
-    end_time = 10
+    end_time = 500
     my_list = ToDoList(goals2, start_time=0, end_time=end_time)
     mdp = ToDoListMDP(my_list)
     start_state = mdp.getStartState()
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     converged = False
     i = 0
-    print V_states
+    # print V_states
     while not converged:
         print 'iteration', i
         i += 1
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     while not mdp.isTerminal(state):
         optimal_value = V_states[state][0]
         optimal_action = V_states[state][1]
-        print "opt action", optimal_action
+        # print "opt action", optimal_action
         task = mdp.getTasksList()[optimal_action]
         next_state_tasks = list(state[0])[:]
         next_state_tasks[optimal_action] = 1
