@@ -262,6 +262,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.noise = 0.0
 
         self.states = []
+        numTasks = len(todolist.getTasks())
         for t in range(end_time + 2):
             bit_vectors = list(itertools.product([0, 1], repeat=numTasks))
             for bv in bit_vectors:
