@@ -442,9 +442,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         tasks = state[0]
         time = state[1]
-        # check if the global end time is reached
+        # check if the global end time is reached or if all tasks are completed
         if time > self.todolist.getEndTime() or not 0 in tasks:
-            return True   
+            return True
         # check if there are any goals that are still active and not completed
         for goal in self.goals:
             if self.isGoalActive(goal, time) and not self.isGoalCompleted(goal, state):
