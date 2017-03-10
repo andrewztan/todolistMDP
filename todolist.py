@@ -261,6 +261,13 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.livingReward = 0.0
         self.noise = 0.0
 
+        self.states = []
+        for t in range(end_time + 2):
+            bit_vectors = list(itertools.product([0, 1], repeat=numTasks))
+            for bv in bit_vectors:
+                state = (bv, t)
+                states.append(state)
+
     def getTasksList(self):
         return self.index_to_task
 
@@ -293,7 +300,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         Return a list of all states in the MDP.
         Not generally possible for large MDPs.
         """
-        abstract
+        return self.states
 
     def getStartState(self):
         """
