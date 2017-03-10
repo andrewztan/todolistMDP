@@ -19,6 +19,8 @@ def value_iteration(mdp):
     converged = False
     iterations = 0
     # print V_states
+
+    # Perform Value Iteration
     while not converged:
         print 'iteration', iterations
         iterations += 1
@@ -38,6 +40,8 @@ def value_iteration(mdp):
     start_state = mdp.getStartState()
     state = start_state
     optimal_tasks = []
+
+    # Record Optimal Policy from start state
     while not mdp.isTerminal(state):
         optimal_value = V_states[state][0]
         optimal_action = V_states[state][1]
@@ -75,7 +79,7 @@ def choose_action(mdp, state, V_states):
     possible_actions = mdp.getPossibleActions(state)   
     best_action = None
     best_value = -float('inf')
-    if len(possible_actions) == 0:
+    if mdp.isTerminal(state):
         best_value = 0
         best_action = 0
     for a in possible_actions:
@@ -143,6 +147,7 @@ def policy_iteration(mdp):
     states = mdp.getStates()
     policy = {}
     new_policy = {}
+    # create initial policies
     for state in states:
         # new_policy[state] = 0
         tasks = state[0]
@@ -193,3 +198,6 @@ def policy_iteration(mdp):
 
 
 
+=======
+    return policy
+>>>>>>> 94cc6dcb1ab2c3bea2a18b5db1058347294f71da
