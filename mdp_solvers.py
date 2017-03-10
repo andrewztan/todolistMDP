@@ -1,5 +1,5 @@
 import time
-import numpy as np
+import numpy as np 
 
 def value_iteration(mdp, gamma=1.0):
     """
