@@ -9,11 +9,8 @@ def value_iteration(mdp, gamma=1.0):
     """
     numTasks = len(mdp.getTasksList())
     V_states = {}
-    for t in range(end_time + 2):
-        bit_vectors = list(itertools.product([0, 1], repeat=numTasks))
-        for bv in bit_vectors:
-            state = (bv, t)
-            V_states[state] = (0, None)
+    for state in mdp.getStates():
+        V_states[state] = (0, None)
 
     start = time.time()
     
@@ -30,14 +27,14 @@ def value_iteration(mdp, gamma=1.0):
             next_V_states[state] = choose_action(mdp, state, V_states)
 
             old_state_value = V_states[state][0]
-            new_state_value = best_value
+            new_state_value = next_V_states[state][0]
             if abs(old_state_value - new_state_value) > 0.1:
                 converged = False
         V_states = next_V_states
 
     end = time.time()
 
-    start_state = (tuple([0 for _ in range(numTasks)]), 0)
+    start_state = mdp.getStartState()
     state = start_state
     optimal_tasks = []
     while not mdp.isTerminal(state):
@@ -56,7 +53,7 @@ def value_iteration(mdp, gamma=1.0):
     
     return optimal_policy, iterations, time_elapsed
 
-def get_Q_value(mdp, state, action, V_states):
+def get_Q_value(mdp, state, action, V_states, gamma=1.0):
     total = 0
     trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
     for pair in trans_states_and_probs:
@@ -106,7 +103,9 @@ def policy_extraction(mdp, v_states):
 def policy_iteration(mdp):
     states = mdp.getStates()
     policy = {}
-    new_policy = {state: 0 for state in states}
+    new_policy = {}
+    for state in states:
+        new_policy[state] = 0
     
     # repeat until policy converges
     while policy != new_policy:
