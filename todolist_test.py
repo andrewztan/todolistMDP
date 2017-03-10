@@ -160,7 +160,7 @@ goals_list = [goals1, goals2, goals3, goals4, goals5, goals6]
 iterations_list = []
 times = []
 
-for i in range(3):
+for i in range(1):
     print('goals', i+1)
     goals = goals_list[i]
     todolist = ToDoList(goals, start_time=0, end_time=end_time)
