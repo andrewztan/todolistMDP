@@ -104,8 +104,11 @@ def policy_iteration(mdp):
     states = mdp.getStates()
     policy = {}
     new_policy = {}
+    # create initial policies
     for state in states:
-        new_policy[state] = 0
+        tasks = state[0]
+        # set initial policy of each state to the first possible action (index of first 0)
+        new_policy[state] = tasks.index(0)
     
     # repeat until policy converges
     while policy != new_policy:
@@ -114,3 +117,4 @@ def policy_iteration(mdp):
         new_policy = policy_extraction(mdp, v_states)
         
     return policy
+    
