@@ -262,11 +262,12 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.noise = 0.0
 
         self.states = []
-        for t in range(end_time + 2):
+        numTasks = len(todolist.getTasks())
+        for t in range(self.todolist.getEndTime() + 2):
             bit_vectors = list(itertools.product([0, 1], repeat=numTasks))
             for bv in bit_vectors:
                 state = (bv, t)
-                states.append(state)
+                self.states.append(state)
 
     def getTasksList(self):
         return self.index_to_task
@@ -289,18 +290,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
     def tasksToBinary(self, tasks):
         """
         DONE 
-
         Convert a list of Task objects to a bit vector with 1 being complete and 0 if not complete. 
         """
         binary_tasks = tuple([1 if task.isComplete() else 0 for task in tasks])
         return binary_tasks
-
-    def getStates(self):
-        """
-        Return a list of all states in the MDP.
-        Not generally possible for large MDPs.
-        """
-        return self.states
 
     def getStartState(self):
         """
@@ -310,6 +303,13 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         start_state = self.tasksToBinary(self.todolist.getTasks())
         return (start_state, 0)
+
+    def getStates(self):
+        """
+        Return a list of all states in the MDP.
+        Not generally possible for large MDPs.
+        """
+        return self.states
 
     def getPossibleActions(self, state):
         """
