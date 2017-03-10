@@ -19,7 +19,7 @@ if __name__ == '__main__':
         Goal("Goal A", [
             Task("Task A1", 1), 
             Task("Task A2", 1)], 
-            {10: 100},
+            {20: 100},
             penalty=-10),
         Goal("Goal B", [
             Task("Task B1", 2),  
@@ -33,7 +33,7 @@ if __name__ == '__main__':
             penalty=-10000)
     ]
 
-    end_time = 10
+    end_time = 20
     my_list = ToDoList(goals2, start_time=0, end_time=end_time)
     mdp = ToDoListMDP(my_list)
     start_state = mdp.getStartState()
