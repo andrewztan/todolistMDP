@@ -160,7 +160,6 @@ goals_list = [goals1, goals2, goals3, goals4, goals5, goals6]
 iterations_list = []
 times = []
 
-<<<<<<< HEAD
 """
 for i in range(3):
 =======

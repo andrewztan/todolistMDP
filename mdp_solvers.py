@@ -189,15 +189,3 @@ def policy_iteration(mdp):
     return optimal_policy, iterations, time_elapsed
 
 
-
-
-
-
-
-
-
-
-
-=======
-    return policy
->>>>>>> 94cc6dcb1ab2c3bea2a18b5db1058347294f71da
