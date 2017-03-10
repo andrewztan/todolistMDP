@@ -1,10 +1,11 @@
 import time
 import numpy as np 
+from numpy import linalg as LA
 
-def value_iteration(mdp, gamma=1.0):
+def value_iteration(mdp):
     """
     Given a ToDoListMDP, perform value iteration/backward induction to find the optimal policy
-    Input: MDP, gamma decay
+    Input: MDP
     Output: Optimal policy, number of iterations, empirical runtime
     """
     numTasks = len(mdp.getTasksList())
@@ -19,7 +20,7 @@ def value_iteration(mdp, gamma=1.0):
     iterations = 0
     # print V_states
     while not converged:
-        print('iteration', iterations)
+        print 'iteration', iterations
         iterations += 1
         next_V_states = {} 
         converged = True
@@ -53,7 +54,7 @@ def value_iteration(mdp, gamma=1.0):
     
     return optimal_policy, iterations, time_elapsed
 
-def get_Q_value(mdp, state, action, V_states, gamma=1.0):
+def get_Q_value(mdp, state, action, V_states):
     total = 0
     trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
     for pair in trans_states_and_probs:
@@ -61,8 +62,13 @@ def get_Q_value(mdp, state, action, V_states, gamma=1.0):
         tasks = next_state[0]
         time = next_state[1]
         prob = pair[1]
-        next_state_value = V_states[next_state][0]
-        total += prob * (mdp.getReward(state, action, next_state) + gamma * next_state_value)
+        # IMPORTANT: below varies on val iter or policy iter
+        v = V_states[next_state]
+        if isinstance(v, tuple):
+            next_state_value = V_states[next_state][0]
+        else:
+            next_state_value = V_states[next_state]
+        total += prob * (mdp.getReward(state, action, next_state) + mdp.getGamma() * next_state_value)
     return total
 
 def choose_action(mdp, state, V_states):
@@ -71,6 +77,7 @@ def choose_action(mdp, state, V_states):
     best_value = -float('inf')
     if len(possible_actions) == 0:
         best_value = 0
+        best_action = 0
     for a in possible_actions:
         q_value = get_Q_value(mdp, state, a, V_states)
         if q_value > best_value:
@@ -83,10 +90,37 @@ def policy_evaluation(mdp, policies):
     given an MDP and a policy dictionary (from policy improvement)
     returns the V states for that policy for each state. V_states: {state: (V(s), action)}
     """
+    # print(policies)
+    states = mdp.getStates()
+    n = len(states)
+    A = []
+    b = [0 for i in range(n)]
+    # print 'n', n
+    for i in range(n):
+        state = states[i]
+        action = policies[state]
+        row = [0 for index in range(n)]
+        row[i] = -1
+        # add a helper function in mdp class to compute neighbors and their indices (for future)
+        for pair in mdp.getTransitionStatesAndProbs(state, action):
+            (next_state, prob) = pair
+            j = states.index(next_state)
+            reward = mdp.getReward(state, action, next_state)
+
+            row[j] = mdp.getGamma() * prob
+            b[i] = b[i] - prob * reward  
+        A.append(row)
+
+    A = np.array(A)
+    b = np.array(b)
+    # print(A)
+    v = LA.solve(A, b)
+    v_states = {state: value for (state, value) in zip(states, v)}
     
+    return v_states
 
     
-def policy_extraction(mdp, v_states):
+def policy_extraction(mdp, V_states):
     """
     given an MDP and V_states (from policy evaluation)
     returns the optimal policy (policy is dictionary{states: action index})
@@ -95,22 +129,67 @@ def policy_extraction(mdp, v_states):
     policies = {}
     states = mdp.getStates()
     for state in states:
-        best_action = choose_action(mdp, state, V_states)[0]
+        best_action = choose_action(mdp, state, V_states)[1]
         policies[state] = best_action
     
     return policies
 
 def policy_iteration(mdp):
+    """
+    given an MDP
+    performs policy iteration and returns the converged policy
+    """
+
     states = mdp.getStates()
     policy = {}
     new_policy = {}
     for state in states:
-        new_policy[state] = 0
+        # new_policy[state] = 0
+        tasks = state[0]
+        # set initial policy of each state to the first possible action (index of first 0)
+        if 0 in tasks:
+            new_policy[state] = tasks.index(0)
+        else:
+            new_policy[state] = 0
     
+    start = time.time()
+
+    iterations = 0
     # repeat until policy converges
     while policy != new_policy:
+        print 'iterations', iterations
+        iterations += 1
+
         policy = new_policy
         v_states = policy_evaluation(mdp, policy)
         new_policy = policy_extraction(mdp, v_states)
         
-    return policy
+    end = time.time() 
+
+    start_state = mdp.getStartState()
+    state = start_state
+    optimal_tasks = []
+    while not mdp.isTerminal(state):
+        optimal_action = policy[state]
+        task = mdp.getTasksList()[optimal_action]
+        next_state_tasks = list(state[0])[:]
+        next_state_tasks[optimal_action] = 1
+        next_state = (tuple(next_state_tasks), state[1] + task.getTimeCost())
+        state = next_state
+        optimal_tasks.append(task)
+
+    optimal_policy = [task.getDescription() for task in optimal_tasks]
+    time_elapsed = end - start
+
+    return optimal_policy, iterations, time_elapsed
+
+
+
+
+
+
+
+
+
+
+

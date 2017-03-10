@@ -233,7 +233,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
     2. time
     """
 
-    def __init__(self, todolist):
+    def __init__(self, todolist, gamma=1.0):
         self.todolist = todolist
         self.start_state = self.getStartState()
 
@@ -261,6 +261,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.livingReward = 0.0
         self.noise = 0.0
 
+        self.gamma = gamma
+
         self.states = []
         numTasks = len(todolist.getTasks())
         for t in range(self.todolist.getEndTime() + 2):
@@ -268,6 +270,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
             for bv in bit_vectors:
                 state = (bv, t)
                 self.states.append(state)
+
+    def getGamma(self):
+        return self.gamma
 
     def getTasksList(self):
         return self.index_to_task

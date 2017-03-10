@@ -155,11 +155,12 @@ goals6 = [
 
 # plotting number of tasks vs runtime with time kept constant at 500
 
-end_time = 500
+end_time = 5
 goals_list = [goals1, goals2, goals3, goals4, goals5, goals6]
 iterations_list = []
 times = []
 
+"""
 for i in range(3):
     print('goals', i+1)
     goals = goals_list[i]
@@ -171,3 +172,27 @@ for i in range(3):
     print(time_elapsed)
     print(policy)
     print()
+"""
+
+todolist = ToDoList(goals3, start_time=0, end_time=end_time)
+mdp = ToDoListMDP(todolist)
+
+# run with value iteration
+print 'value iteration'
+vi_policy, vi_iterations, vi_time_elapsed = value_iteration(mdp)
+print 'policy', vi_policy
+print 'time (s)', vi_time_elapsed
+print ''
+
+# run with policy iteration
+print 'policy iteration'
+pi_policy, pi_iterations, pi_time_elapsed = policy_iteration(mdp)
+print 'policy', pi_policy
+print 'time (s)', pi_time_elapsed
+
+
+
+
+
+
+
