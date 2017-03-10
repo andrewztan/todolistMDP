@@ -99,7 +99,7 @@ def policy_extraction(mdp, v_states):
     policies = {}
     states = mdp.getStates()
     for state in states:
-        best_action = choose_action(mdp, state, V_states)[0]
+        best_action = choose_action(mdp, state, V_states)[1]
         policies[state] = best_action
     
     return policies
