@@ -435,9 +435,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         state as having a self-loop action 'pass' with zero reward; the formulations
         are equivalent.
         """
+        tasks = state[0]
         time = state[1]
         # check if the global end time is reached
-        if time > self.todolist.getEndTime():
+        if time > self.todolist.getEndTime() or not 0 in tasks:
             return True   
         # check if there are any goals that are still active and not completed
         for goal in self.goals:

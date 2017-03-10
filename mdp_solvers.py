@@ -73,7 +73,7 @@ def choose_action(mdp, state, V_states):
     possible_actions = mdp.getPossibleActions(state)   
     best_action = None
     best_value = -float('inf')
-    if len(possible_actions) == 0:
+    if mdp.isTerminal(state):
         best_value = 0
     for a in possible_actions:
         q_value = get_Q_value(mdp, state, a, V_states)
