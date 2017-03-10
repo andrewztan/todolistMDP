@@ -1,12 +1,15 @@
+from todolist import *
+from mdp_solvers import *
+
 goals1 = [
     Goal("Goal A", [
         Task("Task A1", 1)], 
         {1: 100},
-        penalty=-10000),
+        penalty=-1000),
     Goal("Goal B", [
         Task("Task B2", 1)], 
         {1: 10},
-        penalty=-1000)
+        penalty=-1000000)
 ]
 
 goals2 = [
@@ -157,7 +160,7 @@ goals_list = [goals1, goals2, goals3, goals4, goals5, goals6]
 iterations_list = []
 times = []
 
-for i in range(len(goals_list)):
+for i in range(3):
     print('goals', i+1)
     goals = goals_list[i]
     todolist = ToDoList(goals, start_time=0, end_time=end_time)
@@ -166,5 +169,5 @@ for i in range(len(goals_list)):
     iterations_list.append(iterations)
     times.append(time_elapsed)
     print(time_elapsed)
+    print(policy)
     print()
-    

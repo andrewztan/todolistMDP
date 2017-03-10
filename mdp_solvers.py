@@ -27,7 +27,7 @@ def value_iteration(mdp, gamma=1.0):
             next_V_states[state] = choose_action(mdp, state, V_states)
 
             old_state_value = V_states[state][0]
-            new_state_value = best_value
+            new_state_value = next_V_states[state][0]
             if abs(old_state_value - new_state_value) > 0.1:
                 converged = False
         V_states = next_V_states
@@ -53,7 +53,7 @@ def value_iteration(mdp, gamma=1.0):
     
     return optimal_policy, iterations, time_elapsed
 
-def get_Q_value(mdp, state, action, V_states):
+def get_Q_value(mdp, state, action, V_states, gamma=1.0):
     total = 0
     trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
     for pair in trans_states_and_probs:
@@ -105,7 +105,7 @@ def policy_iteration(mdp):
     policy = {}
     new_policy = {}
     for state in states:
-        new_policy[state] = 
+        new_policy[state] = 0
     
     # repeat until policy converges
     while policy != new_policy:
