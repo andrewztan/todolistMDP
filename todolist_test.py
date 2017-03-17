@@ -155,7 +155,7 @@ goals6 = [
 
 # plotting number of tasks vs runtime with time kept constant at 500
 
-end_time = 5
+end_time = 30
 goals_list = [goals1, goals2, goals3, goals4, goals5, goals6]
 iterations_list = []
 times = []
@@ -177,7 +177,7 @@ for i in range(1):
     print()
 """
 
-todolist = ToDoList(goals3, start_time=0, end_time=end_time)
+todolist = ToDoList(goals2, start_time=0, end_time=end_time)
 mdp = ToDoListMDP(todolist)
 
 # run with value iteration
