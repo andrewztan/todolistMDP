@@ -2,62 +2,6 @@ import time
 import numpy as np 
 from numpy import linalg as LA
 
-def value_iteration(mdp):
-    """
-    Given a ToDoListMDP, perform value iteration/backward induction to find the optimal policy
-    Input: MDP
-    Output: Optimal policy, number of iterations, empirical runtime
-    """
-    numTasks = len(mdp.getTasksList())
-    V_states = {}
-    for state in mdp.getStates():
-        V_states[state] = (0, None)
-
-    start = time.time()
-    
-    # perform value iteration with s iterations
-    converged = False
-    iterations = 0
-    # print V_states
-
-    # Perform Value Iteration
-    while not converged:
-        print 'iteration', iterations
-        iterations += 1
-        next_V_states = {} 
-        converged = True
-        for state in V_states:
-            next_V_states[state] = choose_action(mdp, state, V_states)
-
-            old_state_value = V_states[state][0]
-            new_state_value = next_V_states[state][0]
-            if abs(old_state_value - new_state_value) > 0.1:
-                converged = False
-        V_states = next_V_states
-
-    end = time.time()
-
-    start_state = mdp.getStartState()
-    state = start_state
-    optimal_tasks = []
-
-    # Record Optimal Policy from start state
-    while not mdp.isTerminal(state):
-        optimal_value = V_states[state][0]
-        optimal_action = V_states[state][1]
-        # print "opt action", optimal_action
-        task = mdp.getTasksList()[optimal_action]
-        next_state_tasks = list(state[0])[:]
-        next_state_tasks[optimal_action] = 1
-        next_state = (tuple(next_state_tasks), state[1] + task.getTimeCost())
-        state = next_state
-        optimal_tasks.append(task)
-
-    optimal_policy = [task.getDescription() for task in optimal_tasks]
-    time_elapsed = end - start
-    
-    return optimal_policy, iterations, time_elapsed
-
 def get_Q_value(mdp, state, action, V_states):
     total = 0
     trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
