@@ -19,15 +19,10 @@ goals2 = [
         {10: 100},
         penalty=-10),
     Goal("Goal B", [
-        Task("Task B1", 2),  
-        Task("Task B2", 2)], 
+        Task("Task B1", 1),  
+        Task("Task B2", 1)], 
         {1: 10, 10: 10},
-        penalty=0),
-    Goal("Goal C", [
-        Task("Task C1", 3),  
-        Task("Task C2", 3)], 
-        {1: 10, 6: 100},
-        penalty=-1)
+        penalty=0)
 ]
 
 goals3 = [
@@ -180,7 +175,7 @@ for i in range(1):
 todolist = ToDoList(goals2, start_time=0, end_time=end_time)
 mdp = ToDoListMDP(todolist)
 
-# run with value iteration
+# # run with value iteration
 print 'value iteration'
 vi_policy, vi_iterations, vi_time_elapsed = value_iteration(mdp)
 print 'policy', vi_policy
@@ -192,7 +187,6 @@ print 'policy iteration'
 pi_policy, pi_iterations, pi_time_elapsed = policy_iteration(mdp)
 print 'policy', pi_policy
 print 'time (s)', pi_time_elapsed
-
 
 
 
