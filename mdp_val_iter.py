@@ -13,7 +13,7 @@ def value_iteration(mdp):
     for state in mdp.getStates():
         V_states[state] = (0, None)
 
-    start = time.time()
+    # start = time.time()
     
     # perform value iteration with s iterations
     converged = False
@@ -22,6 +22,7 @@ def value_iteration(mdp):
 
     # Perform Value Iteration
     while not converged:
+        start = time.time()
         print 'iteration', iterations
         iterations += 1
         next_V_states = {} 
@@ -34,8 +35,10 @@ def value_iteration(mdp):
             if abs(old_state_value - new_state_value) > 0.1:
                 converged = False
         V_states = next_V_states
+        end = time.time()
+        print 'iteration time:', end - start
 
-    end = time.time()
+    # end = time.time()
 
     start_state = mdp.getStartState()
     state = start_state
