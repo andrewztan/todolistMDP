@@ -7,6 +7,7 @@ import mdp
 import itertools
 import math
 import numpy as np
+import time
 
 class ToDoList():
     """
@@ -272,6 +273,68 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
                 self.states.append(state)
 
         self.state_indices = {self.states[i]: i for i in range(len(self.states))}
+
+        self.build_graphs()
+
+    def build_graphs(self):
+        # self.forward_graph = {}
+        start = time.time()
+        print 'building reverse graph'
+        self.reverse_graph = {}
+
+        for state in self.states:
+            # if state not in self.forward_graph:
+                # self.adj_list[state] = set()
+
+            actions = self.getPossibleActions(state)
+            for a in actions:
+                trans_states_and_probs = self.getTransitionStatesAndProbs(state, a)
+                for pair in trans_states_and_probs:
+                    next_state, prob = pair
+
+                    if next_state not in self.reverse_graph:
+                        self.reverse_graph[next_state] = set()
+
+                    self.reverse_graph[next_state].add(state)
+                    # self.forward_graph[state].add(next_state)
+        print 'done building reverse graph'
+        end = time.time()
+        print 'time:', end - start
+
+    def linearize(self):
+        postorder_dict = dfs(self.reverse_graph)
+        postorder = [(v, -postorder_dict[v]) for v in postorder_dict]
+        dtype = [('state', tuple), ('postorder', int)]
+        a = np.array(postorder, dtype=dtype)
+        reverse_post = np.sort(a, order='postorder')
+
+        linearized_states = [state for (state, i) in reverse_post]
+        return linearized_states
+
+    def dfs(graph):
+        visited = {}
+        preorder = {}
+        postorder = {}
+        i = 1
+
+        def explore(v):
+            visited[v] = True
+            preorder[v] = i
+            i += 1
+            for u in graph[v]:
+                if not visited[u]:
+                    explore(u)
+            postorder[v] = i
+            i += 1
+
+        for v in graph:
+            visited[v] = False
+
+        for v in graph:
+            if not visited[v]:
+                explore(v)
+
+        return postorder
 
     def getGamma(self):
         return self.gamma
