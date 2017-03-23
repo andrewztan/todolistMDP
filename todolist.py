@@ -271,6 +271,8 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
                 state = (bv, t)
                 self.states.append(state)
 
+        self.state_indices = {self.states[i]: i for i in range(len(self.states))}
+
     def getGamma(self):
         return self.gamma
 
@@ -315,6 +317,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         Not generally possible for large MDPs.
         """
         return self.states
+
+    def getStateIndex(self, state):
+        return self.state_indices[state]
 
     def getPossibleActions(self, state):
         """

@@ -1,6 +1,45 @@
 import time
 import numpy as np 
 from numpy import linalg as LA
+from scipy.sparse import linalg as sLA
+from scipy.sparse import csc_matrix
+from scipy.sparse import csr_matrix
+
+np.set_printoptions(threshold='nan')
+
+def val_iter(mdp, policy):
+    """
+    Given a ToDoListMDP and a policy, perform value iteration to find values from the policy
+    Input: MDP, policy
+    Output: Values according to policy
+    """
+
+    V_states = {}
+    for state in mdp.getStates():
+        V_states[state] = 0
+
+    # perform value iteration with s iterations
+    converged = False
+    iterations = 0
+    # print V_states
+
+    # Perform Value Iteration
+    while not converged:
+        # print 'iteration', iterations
+        iterations += 1
+        next_V_states = {} 
+        converged = True
+        for state in V_states:
+            action = policy[state]
+            next_V_states[state] = do_action(mdp, state, action, V_states)
+
+            old_state_value = V_states[state]
+            new_state_value = next_V_states[state]
+            if abs(old_state_value - new_state_value) > 10.0:
+                converged = False
+        V_states = next_V_states
+
+    return V_states
 
 def get_Q_value(mdp, state, action, V_states):
     total = 0
@@ -19,6 +58,15 @@ def get_Q_value(mdp, state, action, V_states):
         total += prob * (mdp.getReward(state, action, next_state) + mdp.getGamma() * next_state_value)
     return total
 
+def do_action(mdp, state, action, V_states):
+    total = 0
+    trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
+    for pair in trans_states_and_probs:
+        next_state, prob = pair
+        next_state_value = V_states[next_state]
+        total += prob * (mdp.getReward(state, action, next_state) + mdp.getGamma() * next_state_value)
+    return total
+
 def choose_action(mdp, state, V_states):
     possible_actions = mdp.getPossibleActions(state)   
     best_action = None
@@ -33,7 +81,8 @@ def choose_action(mdp, state, V_states):
             best_action = a
     return (best_value, best_action)
 
-def policy_evaluation(mdp, policies, empty_A, empty_b):
+def policy_evaluation(mdp, policy):
+    start = time.time()
     """
     given an MDP and a policy dictionary (from policy improvement)
     returns the V states for that policy for each state. V_states: {state: (V(s), action)}
@@ -41,117 +90,87 @@ def policy_evaluation(mdp, policies, empty_A, empty_b):
     # print(policies)
     # start = time.time()
 
-    states = mdp.getStates()
-    gamma = mdp.getGamma()
-    n = len(states)
-    print n
+    # states = mdp.getStates()
+    # gamma = mdp.getGamma()
+    # n = len(states)
+    # print n
 
-    """
-    A = []
-    b = [0 for i in range(n)]
-    # print 'n', n
-    for i in range(n):
-        state = states[i]
-        action = policies[state]
-        row = [0 for index in range(n)]
-        row[i] = -1
-        # add a helper function in mdp class to compute neighbors and their indices (for future)
-        for pair in mdp.getTransitionStatesAndProbs(state, action):
-            (next_state, prob) = pair
-            j = states.index(next_state)
-            reward = mdp.getReward(state, action, next_state)
+    """ 
+    fast = False
+    fast = True
 
-            row[j] = mdp.getGamma() * prob
-            b[i] = b[i] - prob * reward  
-        A.append(row)
+    if not fast:
+        # print 'not fast'
+        A = []
+        b = [0 for i in range(n)]
+        # print 'n', n
+        for i in range(n):
+            state = states[i]
+            action = policies[state]
+            row = [0 for index in range(n)]
+            row[i] = -1
+            # add a helper function in mdp class to compute neighbors and their indices (for future)
+            for pair in mdp.getTransitionStatesAndProbs(state, action):
+                (next_state, prob) = pair
+                j = states.index(next_state)
+                reward = mdp.getReward(state, action, next_state)
 
-    A = np.array(A)
-    b = np.array(b)
+                row[j] = mdp.getGamma() * prob
+                b[i] = b[i] - prob * reward  
+            A.append(row)
 
-    print A
-    """
+        A = np.array(A)
+        b = np.array(b)
+        # print A
 
-    # """
-    A = empty_A
-    b = empty_b
-    # print 'n', n
-    
-    start = time.time()
-
-    for i in range(n):
+    else: 
+        start = time.time()
+        A = np.zeros((n, n))
+        b = np.zeros(n)
+        # end = time.time()
+        # print 'copy time', end - start
 
         # start = time.time()
 
-        state = states[i]
-        action = policies[state]
-        A[i][i] = -1
-        # print mdp.getTransitionStatesAndProbs(state, action)
-        # if i == n-1: print 'this state', state
-        for pair in mdp.getTransitionStatesAndProbs(state, action):
+        for i in range(n):
+            # start = time.time()
+            state = states[i]
+            action = policies[state]
+            A[i][i] = -1
+            # print mdp.getTransitionStatesAndProbs(state, action)
+            # if i == n-1: print 'this state', state
             
-            next_state, prob = pair
-            reward = mdp.getReward(state, action, next_state)
-            j = states.index(next_state)
+            for pair in mdp.getTransitionStatesAndProbs(state, action):
+                
+                next_state, prob = pair
+                reward = mdp.getReward(state, action, next_state)
 
-            # if i == n-1: 
-                # print 'next state', next_state
-                # print 'prob', prob
-                # print 'reward', reward
+                j = mdp.getStateIndex(next_state)
 
-            A[i][j] = gamma * prob
-            b[i] = b[i] - prob * reward
+                A[i][j] = gamma * prob
+                b[i] = b[i] - prob * reward
+            
+        end = time.time()
+        print 'creating matrix time', end - start 
+        # print A
 
-
-
-        # ((state_j, prob_j), (state_k, prob_k)) = mdp.getTransitionStatesAndProbs(state, action)
-        
-        # reward_j = mdp.getReward(state, action, state_j)
-        # reward_k = mdp.getReward(state, action, state_k)
-        
-        # start = time.time()
-        # j = states.index(state_j)
-        # end = time.time()
-        # # if i == 0: print 'searching for index', end - start
-        # start = time.time()
-        # k = states.index(state_k)
-        # end = time.time()
-        # if i == 0: print 'searching for index', end - start
-
-        # FAST STUFF
-        # A[i][j] = gamma * prob_j
-        # A[i][k] = gamma * prob_k
-        # A[i][i] = -1
-        # b[i] = - prob_j * reward_j - prob_k * reward_k
-
-        # row = np.array([-1 if index==i else gamma*prob_j if index==j else gamma*prob_k if index==k else 0 for index in range(n)])
-        # start = time.time()
-        # if A is not None:
-        #     A = np.vstack((A, row))
-        # else: 
-        #     A = np.array([row])
-        # end = time.time()
-        # if i % 500 == 0: print 'time for stack', end - start
-        # b = np.append(b, - prob_j * reward_j - prob_k * reward_k)
-
-        # end = time.time()
-        # if i > n - 10: print 'time for iteration', end - start
-
-    end = time.time()
-    # print 'creating matrix time', end - start 
-    # print A
-    # print b
-    # """
-
+    # start = time.time()
+    # A = csc_matrix(A)
+    # end = time.time()
+    # print 'convert matrix A', end - start
 
     start = time.time()
-    v = LA.solve(A, b)
+    v = sLA.spsolve(csc_matrix(A), b)
+    # print v
     end = time.time()
-    # print 'solving matrix time', end - start
+    print 'solving matrix time', end - start
 
     v_states = {state: value for (state, value) in zip(states, v)}
-    
-    # end = time.time()
-    # print 'policy evaluation time', end - start
+    """
+
+    v_states = val_iter(mdp, policy)
+    end = time.time()
+    print 'pol eval', end - start
 
     return v_states
 
@@ -163,23 +182,23 @@ def policy_extraction(mdp, V_states):
     """
     # start = time.time()
     # for every state, pick the action corresponding to the highest Q-value
-    policies = {}
+    policy = {}
     states = mdp.getStates()
     for state in states:
         best_action = choose_action(mdp, state, V_states)[1]
-        policies[state] = best_action
+        policy[state] = best_action
 
     # end = time.time()
     # print 'policy extraction time', end - start
 
-    return policies
+    return policy
 
 def policy_iteration(mdp):
     """
     given an MDP
     performs policy iteration and returns the converged policy
     """
-
+    start = time.time()
     states = mdp.getStates()
     policy = {}
     new_policy = {}
@@ -192,20 +211,26 @@ def policy_iteration(mdp):
             new_policy[state] = tasks.index(0)
         else:
             new_policy[state] = 0
+    end = time.time()
+    # print 'init policies', end - start
     
-    start = time.time()
     n = len(states)
-    empty_A = np.array([np.array([0 for j in range(n)]) for i in range(n)])
-    empty_b = np.array([0 for i in range(n)])
 
+    start = time.time()
+    empty_A = np.zeros((n, n))
+    empty_b = np.zeros(n)
+    end = time.time()
+    # print 'init empty arrays', end - start
+
+    start = time.time()
     iterations = 0
     # repeat until policy converges
     while policy != new_policy:
-        print 'iterations', iterations
+        print 'iteration', iterations
         iterations += 1
 
         policy = new_policy
-        v_states = policy_evaluation(mdp, policy, empty_A, empty_b)
+        v_states = policy_evaluation(mdp, policy)
         new_policy = policy_extraction(mdp, v_states)
         
     end = time.time() 
