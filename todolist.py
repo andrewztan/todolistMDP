@@ -279,6 +279,44 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.reverse_DAG = MDPGraph(self)
         self.linearized_states = self.reverse_DAG.linearize()
 
+    def getPseudorewards(self):
+        """ getter method for pseudorewards
+        pseudorewards is stored as a dictionary, 
+        where keys are tuples (s, s') and values are PR'(s, a, s')
+        """
+        return self.pseudorewards
+
+    def calculatePseudorewards(self, v_states):
+        """
+        private method for calculating untransformed pseudorewards PR
+        """
+        self.pseudorewards = {} # keys are (s, s'). values are PR(s, a, s')
+        for state in self.states:
+            actions = self.getPossibleActions(state)
+            for a in actions:
+                trans_states_and_probs = self.getTransitionStatesAndProbs(state, a)
+                for pair in trans_states_and_probs:
+                    next_state, prob = pair
+                    r = self.getReward(state, a, next_state)
+                    pr = v_states[next_state] - v_states[state] + r
+                    self.pseudorewards[(state, next_state)] = pr
+
+        # applies linear transform PR to PR'
+        self.transformPseudorewards()
+
+    def transformPseudorewards(self):
+        """
+        linearly transforms PR to PR' such that:
+            - PR' > 0 for all optimal actions
+            - PR' <= 0 for all suboptimal actions
+        """
+        
+
+        return None
+
+
+
+
     def buildReverseDAG(self):
         # self.forward_graph = {}
         start = time.time()
@@ -312,7 +350,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         linearized_states = [state for (state, i) in reverse_post]
         self.linearized_states = linearized_states
-        return
+        return 
 
     def getLinearizedStates(self):
         return self.linearized_states
