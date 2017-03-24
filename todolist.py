@@ -277,6 +277,63 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.reverse_DAG = MDPGraph(self)
         self.linearized_states = self.reverse_DAG.linearize()
 
+    def getPseudorewards(self):
+        """ getter method for pseudorewards
+        pseudorewards is stored as a dictionary, 
+        where keys are tuples (s, s') and values are PR'(s, a, s')
+        """
+        return self.pseudorewards
+
+    def calculatePseudorewards(self, v_states):
+        """
+        private method for calculating untransformed pseudorewards PR
+        """
+        self.pseudorewards = {} # keys are (s, s'). values are PR(s, a, s')
+        for state in self.states:
+            actions = self.getPossibleActions(state)
+            for a in actions:
+                trans_states_and_probs = self.getTransitionStatesAndProbs(state, a)
+                for pair in trans_states_and_probs:
+                    next_state, prob = pair
+                    r = self.getReward(state, a, next_state)
+                    pr = v_states[next_state][0] - v_states[state][0] + r
+                    self.pseudorewards[(state, next_state)] = pr
+
+        # applies linear transform PR to PR'
+        self.transformPseudorewards()
+
+    def transformPseudorewards(self):
+        """
+        linearly transforms PR to PR' such that:
+            - PR' > 0 for all optimal actions
+            - PR' <= 0 for all suboptimal actions
+        """
+        highest = -float('inf')
+        sec_highest = -float('inf')
+
+        # a = list(set(self.pseudorewards.values()))
+        # list.sort(a)
+        # print a
+
+        for trans in self.pseudorewards:
+            pr = self.pseudorewards[trans]
+            if pr > highest:
+                sec_highest = highest
+                highest = pr
+            elif pr > sec_highest and pr < highest:
+                sec_highest = pr
+
+        # print highest
+        # print sec_highest
+
+        alpha = max(range(abs(highest), int(math.floor(abs(sec_highest)))))
+        beta = 1
+        if alpha <= 1.0: beta = 10
+
+        for trans in self.pseudorewards:
+            pr = self.pseudorewards[trans]
+            self.pseudorewards[trans] = (alpha + pr) * beta
+        
     def getLinearizedStates(self):
         return self.linearized_states
 
@@ -475,6 +532,7 @@ class MDPGraph():
         print 'done building reverse graph'
         end = time.time()
         print 'time:', end - start
+        print '' 
         # print 'vertices', self.vertices
         # print 'edges', self.edges
 

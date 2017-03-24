@@ -179,11 +179,11 @@ todolist = ToDoList(goals6, start_time=0, end_time=end_time)
 mdp = ToDoListMDP(todolist)
 
 # run with value iteration
-print 'value iteration'
+# print 'value iteration'
 # vi_policy, vi_iterations, vi_time_elapsed = value_iteration(mdp)
 # print 'policy', vi_policy
 # print 'time (s)', vi_time_elapsed
-print ''
+# print ''
 
 # run with backward induction
 print 'backward induction'
