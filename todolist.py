@@ -597,17 +597,17 @@ class MDPGraph():
         visited = {}
         preorder = {}
         postorder = {}
-        i = 1
+        self.counter = 1
 
         def explore(v):
             visited[v] = True
             preorder[v] = i
-            i += 1
+            self.counter += 1
             for u in graph[v]:
                 if not visited[u]:
                     explore(u)
             postorder[v] = i
-            i += 1
+            self.counter += 1
 
         for v in graph:
             visited[v] = False
@@ -615,7 +615,4 @@ class MDPGraph():
         for v in graph:
             if not visited[v]:
                 explore(v)
-
-        return postorder
-
 
