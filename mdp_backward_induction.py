@@ -16,29 +16,11 @@ def backward_induction(mdp):
         V_states[state] = (0, None)
 
     start = time.time()
-    
-    # perform value iteration. should only take 1 iteration
-    converged = False
-    iterations = 0
-    # print V_states
 
     # Perform Backward Iteration (Value Iteration 1 Time)
-    # while not converged:
     start = time.time()
-    print 'iteration', iterations
-    iterations += 1
-    # next_V_states = {} 
-    converged = True
     for state in linearized_states:
-        V_states[state] = choose_action(mdp, state, V_states)
-
-        # old_state_value = V_states[state][0]
-        # new_state_value = next_V_states[state][0]
-        # if abs(old_state_value - new_state_value) > 0.1:
-        #     converged = False
-    # V_states = next_V_states
-    # print V_states
-        
+        V_states[state] = choose_action(mdp, state, V_states)        
 
     end = time.time()
     print 'time:', end - start
@@ -62,7 +44,7 @@ def backward_induction(mdp):
     optimal_policy = [task.getDescription() for task in optimal_tasks]
     time_elapsed = end - start
     
-    return optimal_policy, iterations, time_elapsed
+    return optimal_policy, 1, time_elapsed
 
 def get_Q_value(mdp, state, action, V_states):
     total = 0

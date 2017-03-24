@@ -274,72 +274,11 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
         self.state_to_index = {self.states[i]: i for i in range(len(self.states))}
 
-        # self.buildReverseDAG()
-        # self.linearize()
         self.reverse_DAG = MDPGraph(self)
         self.linearized_states = self.reverse_DAG.linearize()
 
-    # def buildReverseDAG(self):
-    #     # self.forward_graph = {}
-    #     start = time.time()
-    #     print 'building reverse graph'
-    #     self.reverse_graph = {}
-
-    #     for state in self.states:
-    #         actions = self.getPossibleActions(state)
-    #         for a in actions:
-    #             trans_states_and_probs = self.getTransitionStatesAndProbs(state, a)
-    #             for pair in trans_states_and_probs:
-    #                 next_state, prob = pair
-
-    #                 if next_state not in self.reverse_graph:
-    #                     self.reverse_graph[next_state] = set()
-
-    #                 self.reverse_graph[next_state].add(state)
-    #     print 'done building reverse graph'
-    #     end = time.time()
-    #     print 'time:', end - start
-
-    # def linearize(self):
-    #     """
-    #     Creates list of states in topological order
-    #     """
-    #     postorder_dict = self.dfs(self.reverse_graph)
-    #     postorder = [(v, -postorder_dict[v]) for v in postorder_dict]
-    #     dtype = [('state', tuple), ('postorder', int)]
-    #     a = np.array(postorder, dtype=dtype)
-    #     reverse_post = np.sort(a, order='postorder')
-
-    #     self.linearized_states = [state for (state, i) in reverse_post]
-    #     return
-
     def getLinearizedStates(self):
         return self.linearized_states
-
-    # def dfs(self, graph):
-    #     visited = {}
-    #     preorder = {}
-    #     postorder = {}
-    #     i = 1
-
-    #     def explore(v):
-    #         visited[v] = True
-    #         preorder[v] = i
-    #         i += 1
-    #         for u in graph[v]:
-    #             if not visited[u]:
-    #                 explore(u)
-    #         postorder[v] = i
-    #         i += 1
-
-    #     for v in graph:
-    #         visited[v] = False
-
-    #     for v in graph:
-    #         if not visited[v]:
-    #             explore(v)
-
-    #     return postorder
 
     def getGamma(self):
         return self.gamma
@@ -364,7 +303,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def tasksToBinary(self, tasks):
         """
-        DONE 
         Convert a list of Task objects to a bit vector with 1 being complete and 0 if not complete. 
         """
         binary_tasks = tuple([1 if task.isComplete() else 0 for task in tasks])
@@ -372,8 +310,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getStartState(self):
         """
-        DONE 
-
         Return the start state of the MDP.
         """
         start_state = self.tasksToBinary(self.todolist.getTasks())
@@ -391,8 +327,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getPossibleActions(self, state):
         """
-        DONE 
-
         Return list of possible actions from 'state'.
         Returns a list of indices
         """
@@ -408,8 +342,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getTransitionStatesAndProbs(self, state, action):
         """
-        DONE
-
         Returns list of (nextState, prob) pairs
         representing the states reachable
         from 'state' by taking 'action' along
@@ -443,8 +375,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 
     def getReward(self, state, action, nextState):
         """
-        DONE 
-
         Get the reward for the state, action, nextState transition.
         state: (list of tasks, time)
         action: integer of index of tax
@@ -475,38 +405,9 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
                 reward += goal.deadlinePenalty()
         
         return reward
-        
-        """ logic or old state representation
-        # check deadlines
-        for goal in self.goals:
-            if not self.isGoalActive(goal, next_time):
-                # if a deadline passed, add reward (penalty) for missing a deadline during the time of the action
-                for task_index in self.task_to_index[goal]:
-                    binary_tasks[task_index] = 1
-        
-
-        flipped_indices = [y - x for x, y in zip(prev_tasks, next_tasks)]
-        changed_indices = [i for i, x in enumerate(flipped_indices) if x == 1]
-        changed_goals = set()
-        for task_index in changed_indices:
-            t = self.index_to_task[task_index]
-            changed_goals.add(t.getGoal())
-        print "changed indices:", changed_indices
-        
-        for goal in changed_goals:
-            task_indices = self.task_to_index[goal]
-            tasks = [next_tasks[i] for i in task_indices]
-            if prev_time <= goal.getDeadline() and goal.getDeadline() < next_time:
-                reward += goal.deadlinePenalty()
-            elif task.getGoal() is goal and next_time <= goal.getDeadline():
-                if not 0 in tasks:
-                    reward += goal.getReward(next_time)
-        """
 
     def isTerminal(self, state):
         """
-        DONE
-
         Returns true if the current state is a terminal state.  By convention,
         a terminal state has zero future rewards.  Sometimes the terminal state(s)
         may have no possible actions.  It is also common to think of the terminal
