@@ -36,7 +36,8 @@ def value_iteration(mdp):
                 converged = False
         V_states = next_V_states
         # end = time.time()
-        
+    
+    # print V_states
 
     end = time.time()
     print 'time:', end - start

@@ -153,7 +153,7 @@ goals6 = [
 # plotting number of tasks vs runtime with time kept constant at 500
 
 
-end_time = 3
+end_time = 40
 goals_list = [goals1, goals2, goals3, goals4, goals5, goals6]
 iterations_list = []
 times = []
@@ -175,21 +175,21 @@ for i in range(1):
     print()
 """
 
-todolist = ToDoList(goals1, start_time=0, end_time=end_time)
+todolist = ToDoList(goals6, start_time=0, end_time=end_time)
 mdp = ToDoListMDP(todolist)
 
 # run with value iteration
-print 'value iteration'
-vi_policy, vi_iterations, vi_time_elapsed = value_iteration(mdp)
-print 'policy', vi_policy
-print 'time (s)', vi_time_elapsed
-print ''
+# print 'value iteration'
+# vi_policy, vi_iterations, vi_time_elapsed = value_iteration(mdp)
+# print 'policy', vi_policy
+# print 'time (s)', vi_time_elapsed
+# print ''
 
 # run with backward induction
 print 'backward induction'
-vi_policy, vi_iterations, vi_time_elapsed = backward_induction(mdp)
-print 'policy', vi_policy
-print 'time (s)', vi_time_elapsed
+bi_policy, bi_iterations, bi_time_elapsed = backward_induction(mdp)
+print 'policy', bi_policy
+print 'time (s)', bi_time_elapsed
 print ''
 
 # # run with policy iteration

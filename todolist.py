@@ -298,7 +298,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
                 for pair in trans_states_and_probs:
                     next_state, prob = pair
                     r = self.getReward(state, a, next_state)
-                    pr = v_states[next_state] - v_states[state] + r
+                    pr = v_states[next_state][0] - v_states[state][0] + r
                     self.pseudorewards[(state, next_state)] = pr
 
         # applies linear transform PR to PR'
@@ -310,75 +310,35 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
             - PR' > 0 for all optimal actions
             - PR' <= 0 for all suboptimal actions
         """
+        highest = -float('inf')
+        sec_highest = -float('inf')
+
+        # a = list(set(self.pseudorewards.values()))
+        # list.sort(a)
+        # print a
+
+        for trans in self.pseudorewards:
+            pr = self.pseudorewards[trans]
+            if pr > highest:
+                sec_highest = highest
+                highest = pr
+            elif pr > sec_highest and pr < highest:
+                sec_highest = pr
+
+        # print highest
+        # print sec_highest
+
+        alpha = max(range(abs(highest), int(math.floor(abs(sec_highest)))))
+        beta = 1
+        if alpha <= 1.0: beta = 10
+
+        for trans in self.pseudorewards:
+            pr = self.pseudorewards[trans]
+            self.pseudorewards[trans] = (alpha + pr) * beta
         
-
-        return None
-
-
-
-
-    def buildReverseDAG(self):
-        # self.forward_graph = {}
-        start = time.time()
-        print 'building reverse graph'
-        self.reverse_graph = {}
-
-        for state in self.states:
-            actions = self.getPossibleActions(state)
-            for a in actions:
-                trans_states_and_probs = self.getTransitionStatesAndProbs(state, a)
-                for pair in trans_states_and_probs:
-                    next_state, prob = pair
-
-                    if next_state not in self.reverse_graph:
-                        self.reverse_graph[next_state] = set()
-
-                    self.reverse_graph[next_state].add(state)
-        print 'done building reverse graph'
-        end = time.time()
-        print 'time:', end - start
-
-    def linearize(self):
-        """
-        Creates list of states in topological order
-        """
-        postorder_dict = self.dfs(self.reverse_graph)
-        postorder = [(v, -postorder_dict[v]) for v in postorder_dict]
-        dtype = [('state', tuple), ('postorder', int)]
-        a = np.array(postorder, dtype=dtype)
-        reverse_post = np.sort(a, order='postorder')
-
-        linearized_states = [state for (state, i) in reverse_post]
-        self.linearized_states = linearized_states
-        return 
 
     def getLinearizedStates(self):
         return self.linearized_states
-
-    def dfs(self, graph):
-        visited = {}
-        preorder = {}
-        postorder = {}
-        i = 1
-
-        def explore(v):
-            visited[v] = True
-            preorder[v] = i
-            i += 1
-            for u in graph[v]:
-                if not visited[u]:
-                    explore(u)
-            postorder[v] = i
-            i += 1
-
-        for v in graph:
-            visited[v] = False
-
-        for v in graph:
-            if not visited[v]:
-                explore(v)
-
-        return postorder
 
     def getGamma(self):
         return self.gamma
@@ -598,8 +558,11 @@ class MDPGraph():
         self.mdp = mdp
         self.vertices = []
         self.edges = {}
+        self.preorder = {}
+        self.postorder = {}
         for state in mdp.getStates():
-            if sum(state[0]) == 0 and state not in self.edges:
+            self.vertices.append(state)
+            if state not in self.edges:
                 self.edges[state] = set()
             for action in mdp.getPossibleActions(state):
                 for pair in mdp.getTransitionStatesAndProbs(state, action):
@@ -610,6 +573,10 @@ class MDPGraph():
         print 'done building reverse graph'
         end = time.time()
         print 'time:', end - start
+        print '' 
+        # print 'vertices', self.vertices
+        # print 'edges', self.edges
+
 
     def getVertices(self):
         return self.vertices
@@ -621,36 +588,34 @@ class MDPGraph():
         """
         Returns list of states in topological order
         """
-        postorder_dict = self.dfs(self.reverse_graph)
-        postorder = [(v, -postorder_dict[v]) for v in postorder_dict]
+        self.dfs() # run dfs to get postorder
+        # postorder_dict = self.dfs(self.reverse_graph)
+        postorder = [(v, -self.postorder[v]) for v in self.postorder]
         dtype = [('state', tuple), ('postorder', int)]
         a = np.array(postorder, dtype=dtype)
-        reverse_post = np.sort(a, order='postorder')
+        reverse_postorder = np.sort(a, order='postorder')
 
-        linearized_states = [state for (state, i) in reverse_post]
-        self.linearized_states = linearized_states
+        self.linearized_states = [state for (state, i) in reverse_postorder]
         return self.linearized_states
 
-    def dfs(self, graph):
+    def dfs(self):
         visited = {}
-        preorder = {}
-        postorder = {}
         self.counter = 1
 
         def explore(v):
             visited[v] = True
-            preorder[v] = i
+            self.preorder[v] = self.counter
             self.counter += 1
-            for u in graph[v]:
+            for u in self.edges[v]:
                 if not visited[u]:
                     explore(u)
-            postorder[v] = i
+            self.postorder[v] = self.counter
             self.counter += 1
 
-        for v in graph:
+        for v in self.vertices:
             visited[v] = False
 
-        for v in graph:
+        for v in self.vertices:
             if not visited[v]:
                 explore(v)
 
