@@ -279,68 +279,67 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.reverse_DAG = MDPGraph(self)
         self.linearized_states = self.reverse_DAG.linearize()
 
-    def buildReverseDAG(self):
-        # self.forward_graph = {}
-        start = time.time()
-        print 'building reverse graph'
-        self.reverse_graph = {}
+    # def buildReverseDAG(self):
+    #     # self.forward_graph = {}
+    #     start = time.time()
+    #     print 'building reverse graph'
+    #     self.reverse_graph = {}
 
-        for state in self.states:
-            actions = self.getPossibleActions(state)
-            for a in actions:
-                trans_states_and_probs = self.getTransitionStatesAndProbs(state, a)
-                for pair in trans_states_and_probs:
-                    next_state, prob = pair
+    #     for state in self.states:
+    #         actions = self.getPossibleActions(state)
+    #         for a in actions:
+    #             trans_states_and_probs = self.getTransitionStatesAndProbs(state, a)
+    #             for pair in trans_states_and_probs:
+    #                 next_state, prob = pair
 
-                    if next_state not in self.reverse_graph:
-                        self.reverse_graph[next_state] = set()
+    #                 if next_state not in self.reverse_graph:
+    #                     self.reverse_graph[next_state] = set()
 
-                    self.reverse_graph[next_state].add(state)
-        print 'done building reverse graph'
-        end = time.time()
-        print 'time:', end - start
+    #                 self.reverse_graph[next_state].add(state)
+    #     print 'done building reverse graph'
+    #     end = time.time()
+    #     print 'time:', end - start
 
-    def linearize(self):
-        """
-        Creates list of states in topological order
-        """
-        postorder_dict = self.dfs(self.reverse_graph)
-        postorder = [(v, -postorder_dict[v]) for v in postorder_dict]
-        dtype = [('state', tuple), ('postorder', int)]
-        a = np.array(postorder, dtype=dtype)
-        reverse_post = np.sort(a, order='postorder')
+    # def linearize(self):
+    #     """
+    #     Creates list of states in topological order
+    #     """
+    #     postorder_dict = self.dfs(self.reverse_graph)
+    #     postorder = [(v, -postorder_dict[v]) for v in postorder_dict]
+    #     dtype = [('state', tuple), ('postorder', int)]
+    #     a = np.array(postorder, dtype=dtype)
+    #     reverse_post = np.sort(a, order='postorder')
 
-        linearized_states = [state for (state, i) in reverse_post]
-        self.linearized_states = linearized_states
-        return
+    #     self.linearized_states = [state for (state, i) in reverse_post]
+    #     return
 
     def getLinearizedStates(self):
         return self.linearized_states
 
-    def dfs(self, graph):
-        visited = {}
-        preorder = {}
-        postorder = {}
-        i = 1
+    # def dfs(self, graph):
+    #     visited = {}
+    #     preorder = {}
+    #     postorder = {}
+    #     i = 1
 
-        def explore(v):
-            visited[v] = True
-            preorder[v] = i
-            i += 1
-            for u in graph[v]:
-                if not visited[u]:
-                    explore(u)
-            postorder[v] = i
-            i += 1
+    #     def explore(v):
+    #         visited[v] = True
+    #         preorder[v] = i
+    #         i += 1
+    #         for u in graph[v]:
+    #             if not visited[u]:
+    #                 explore(u)
+    #         postorder[v] = i
+    #         i += 1
 
-        for v in graph:
-            visited[v] = False
+    #     for v in graph:
+    #         visited[v] = False
 
-        for v in graph:
-            if not visited[v]:
-                explore(v)
+    #     for v in graph:
+    #         if not visited[v]:
+    #             explore(v)
 
-        return postorder
+    #     return postorder
 
     def getGamma(self):
         return self.gamma
@@ -560,8 +559,11 @@ class MDPGraph():
         self.mdp = mdp
         self.vertices = []
         self.edges = {}
+        self.preorder = {}
+        self.postorder = {}
         for state in mdp.getStates():
-            if sum(state[0]) == 0 and state not in self.edges:
+            self.vertices.append(state)
+            if state not in self.edges:
                 self.edges[state] = set()
             for action in mdp.getPossibleActions(state):
                 for pair in mdp.getTransitionStatesAndProbs(state, action):
@@ -572,6 +574,9 @@ class MDPGraph():
         print 'done building reverse graph'
         end = time.time()
         print 'time:', end - start
+        # print 'vertices', self.vertices
+        # print 'edges', self.edges
+
 
     def getVertices(self):
         return self.vertices
@@ -583,36 +588,34 @@ class MDPGraph():
         """
         Returns list of states in topological order
         """
-        postorder_dict = self.dfs(self.reverse_graph)
-        postorder = [(v, -postorder_dict[v]) for v in postorder_dict]
+        self.dfs() # run dfs to get postorder
+        # postorder_dict = self.dfs(self.reverse_graph)
+        postorder = [(v, -self.postorder[v]) for v in self.postorder]
         dtype = [('state', tuple), ('postorder', int)]
         a = np.array(postorder, dtype=dtype)
-        reverse_post = np.sort(a, order='postorder')
+        reverse_postorder = np.sort(a, order='postorder')
 
-        linearized_states = [state for (state, i) in reverse_post]
-        self.linearized_states = linearized_states
+        self.linearized_states = [state for (state, i) in reverse_postorder]
         return self.linearized_states
 
-    def dfs(self, graph):
+    def dfs(self):
         visited = {}
-        preorder = {}
-        postorder = {}
         self.counter = 1
 
         def explore(v):
             visited[v] = True
-            preorder[v] = i
+            self.preorder[v] = self.counter
             self.counter += 1
-            for u in graph[v]:
+            for u in self.edges[v]:
                 if not visited[u]:
                     explore(u)
-            postorder[v] = i
+            self.postorder[v] = self.counter
             self.counter += 1
 
-        for v in graph:
+        for v in self.vertices:
             visited[v] = False
 
-        for v in graph:
+        for v in self.vertices:
             if not visited[v]:
                 explore(v)
 

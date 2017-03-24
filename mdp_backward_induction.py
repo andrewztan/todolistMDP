@@ -10,6 +10,7 @@ def backward_induction(mdp):
     """
     V_states = {}
     linearized_states = mdp.getLinearizedStates()
+    # print "linearized states:", linearized_states
     numTasks = len(linearized_states)
     for state in linearized_states:
         V_states[state] = (0, None)
@@ -21,22 +22,22 @@ def backward_induction(mdp):
     iterations = 0
     # print V_states
 
-    # Perform Value Iteration
-    while not converged:
-        start = time.time()
-        print 'iteration', iterations
-        iterations += 1
-        next_V_states = {} 
-        converged = True
-        for state in linearized_states:
-            next_V_states[state] = choose_action(mdp, state, V_states)
+    # Perform Backward Iteration (Value Iteration 1 Time)
+    # while not converged:
+    start = time.time()
+    print 'iteration', iterations
+    iterations += 1
+    # next_V_states = {} 
+    converged = True
+    for state in linearized_states:
+        V_states[state] = choose_action(mdp, state, V_states)
 
-            old_state_value = V_states[state][0]
-            new_state_value = next_V_states[state][0]
-            if abs(old_state_value - new_state_value) > 0.1:
-                converged = False
-        V_states = next_V_states
-        # end = time.time()
+        # old_state_value = V_states[state][0]
+        # new_state_value = next_V_states[state][0]
+        # if abs(old_state_value - new_state_value) > 0.1:
+        #     converged = False
+    # V_states = next_V_states
+    # print V_states
         
 
     end = time.time()
