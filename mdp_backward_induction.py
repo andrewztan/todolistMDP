@@ -8,6 +8,8 @@ def backward_induction(mdp):
     Input: MDP
     Output: Optimal policy, number of iterations, empirical runtime
     """
+    start = time.time()
+
     V_states = {}
     linearized_states = mdp.getLinearizedStates()
     # print "linearized states:", linearized_states
@@ -15,8 +17,6 @@ def backward_induction(mdp):
     for state in linearized_states:
         V_states[state] = (0, None)
 
-    start = time.time()
-    
     # perform value iteration. should only take 1 iteration
     converged = False
     iterations = 0
@@ -62,7 +62,7 @@ def backward_induction(mdp):
     optimal_policy = [task.getDescription() for task in optimal_tasks]
     time_elapsed = end - start
 
-    mdp.calculatePseudorewards(V_states)
+    # mdp.calculatePseudorewards(V_states)
     
     return optimal_policy, iterations, time_elapsed
 

@@ -554,7 +554,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
 class MDPGraph():
     def __init__(self, mdp):
         start = time.time()
-        print 'building reverse graph'
+        # print 'building reverse graph'
         self.mdp = mdp
         self.vertices = []
         self.edges = {}
@@ -570,10 +570,10 @@ class MDPGraph():
                     if next_state not in self.edges:
                         self.edges[next_state] = set()
                     self.edges[next_state].add(state)
-        print 'done building reverse graph'
+        # print 'done building reverse graph'
         end = time.time()
-        print 'time:', end - start
-        print '' 
+        # print 'time:', end - start
+        # print '' 
         # print 'vertices', self.vertices
         # print 'edges', self.edges
 
