@@ -155,6 +155,11 @@ class Goal():
     def getDeadline(self):
         return self.deadline
 
+    def getDuration(self):
+        time = 0
+        for task in self.tasks:
+            time += task.getTimeCost()
+        return time
 
     def deadlinePenalty(self):
         return self.penalty
@@ -174,6 +179,9 @@ class Goal():
 
     def isNonGoal(self):
         return self.non_goal
+
+    def getDescription(self):
+        return self.description
 
 
 class Task():
@@ -547,6 +555,7 @@ class MDPGraph():
         """
         Returns list of states in topological order
         """
+
         self.dfs() # run dfs to get postorder
         # postorder_dict = self.dfs(self.reverse_graph)
         postorder = [(v, -self.postorder[v]) for v in self.postorder]
