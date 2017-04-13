@@ -30,6 +30,8 @@ def backward_induction(mdp):
     state = start_state
     optimal_tasks = []
 
+    # print V_states
+
     # Record Optimal Policy from start state
     while not mdp.isTerminal(state):
         optimal_value = V_states[state][0]

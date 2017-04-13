@@ -185,14 +185,32 @@ goals6b = [
         Task("Task G1", 3),  
         Task("Task G2", 3)], 
         {60: 100, 70: 10},
-        penalty=-110),
+        penalty=-110)
+]
+
+
+goals7 = [
+    Goal("CS HW", [
+        Task("CS 1", time_cost=2, prob=0.9), 
+        Task("CS 2", time_cost=3, prob=0.8)], 
+        {7: 5},
+        penalty=-10),
+    Goal("EE Project", [
+        Task("EE 1", time_cost=7, prob=0.5),  
+        Task("EE 2", time_cost=2, prob=1)], 
+        {14: 10},
+        penalty=-20)
+    # Goal("Goal C", [
+    #     Task("Task C1", 3),  
+    #     Task("Task C2", 3)], 
+    #     {1: 10, 6: 100},
+    #     penalty=-1)
 ]
 
 
 # plotting number of tasks vs runtime with time kept constant at 500
 
 
-end_time = 40
 goals_list = [goals1, goals2, goals3, goals4, goals5, goals6]
 iterations_list = []
 times = []
@@ -214,8 +232,11 @@ for i in range(1):
     print()
 """
 
-todolist = ToDoList(goals6, start_time=0, end_time=end_time)
+todolist = ToDoList(goals7, start_time=0, end_time=20, nongoal_val=1)
+print 'mdp'
 mdp = ToDoListMDP(todolist)
+print 'todo.getTasks'
+print mdp.getStartState() 
 
 # run with value iteration
 # print 'value iteration'
@@ -224,6 +245,7 @@ mdp = ToDoListMDP(todolist)
 # print 'time (s)', vi_time_elapsed
 # print ''
 
+
 # run with backward induction
 print 'backward induction'
 bi_policy, bi_iterations, bi_time_elapsed = backward_induction(mdp)
@@ -231,17 +253,18 @@ print 'policy', bi_policy
 print 'time (s)', bi_time_elapsed
 print ''
 
+"""
 # run with goal mdp and then task mdp
 policy, time = solve_big_goals(goals6, end_time)
 print 'policy', policy
 print 'time', time
+"""
 
 # # run with policy iteration
 # print 'policy iteration'
 # pi_policy, pi_iterations, pi_time_elapsed = policy_iteration(mdp)
 # print 'policy', pi_policy
 # print 'time (s)', pi_time_elapsed
-
 
 
 
