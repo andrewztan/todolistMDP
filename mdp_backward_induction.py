@@ -2,10 +2,11 @@ import time
 import numpy as np 
 from numpy import linalg as LA
 
+
 def backward_induction(mdp):
     """
     Given a ToDoListMDP, perform value iteration/backward induction to find the optimal policy
-    Input: MDP
+    Input: ToDoListMDP
     Output: Optimal policy, number of iterations, empirical runtime
     """
     start = time.time()
@@ -52,7 +53,16 @@ def backward_induction(mdp):
     return optimal_policy, 1, time_elapsed
 
 def get_Q_value(mdp, state, action, V_states):
-    total = 0
+    """
+    Input: 
+    mdp: ToDoList MDP
+    state: current state (tasks, time)
+    action: index of action in mdp's tasks
+    V_states: dictionary mapping states to current best (value, action)
+    Output:
+    total: Q-value of state
+    """
+    Q_value = 0
     trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
     for pair in trans_states_and_probs:
         next_state = pair[0]
@@ -65,10 +75,19 @@ def get_Q_value(mdp, state, action, V_states):
             next_state_value = V_states[next_state][0]
         else:
             next_state_value = V_states[next_state]
-        total += prob * (mdp.getReward(state, action, next_state) + mdp.getGamma() * next_state_value)
-    return total
+        Q_value += prob * (mdp.getReward(state, action, next_state) + mdp.getGamma() * next_state_value)
+    return Q_value
 
 def choose_action(mdp, state, V_states):
+    """
+    Input: 
+    mdp: ToDoList MDP
+    state: current state (tasks, time)
+    V_states: dictionary mapping states to current best (value, action)
+    Output:
+    best_value: value of state state
+    best_action: index of action that yields highest value at current state
+    """
     possible_actions = mdp.getPossibleActions(state)   
     best_action = None
     best_value = -float('inf')
@@ -81,3 +100,5 @@ def choose_action(mdp, state, V_states):
             best_value = q_value
             best_action = a
     return (best_value, best_action)
+
+

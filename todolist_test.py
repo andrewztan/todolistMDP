@@ -1,8 +1,10 @@
 from todolist import *
-from mdp_pol_iter import *
-from mdp_val_iter import *
-from mdp_backward_induction import *
-from mdp_goals_solver import *
+from mdp_solvers import *
+import random
+# from mdp_pol_iter import *
+# from mdp_val_iter import *
+# from mdp_backward_induction import *
+# from mdp_goals_solver import *
 
 goals1 = [
     Goal("Goal A", [
@@ -191,15 +193,15 @@ goals6b = [
 
 goals7 = [
     Goal("CS HW", [
-        Task("CS 1", time_cost=2, prob=0.9), 
-        Task("CS 2", time_cost=3, prob=0.8)], 
+        Task("CS 1", time_cost=1, prob=0.9), 
+        Task("CS 2", time_cost=2, prob=0.8)], 
         {7: 5},
         penalty=-10),
     Goal("EE Project", [
-        Task("EE 1", time_cost=7, prob=0.5),  
-        Task("EE 2", time_cost=2, prob=1)], 
-        {14: 10},
-        penalty=-20)
+        Task("EE 1", time_cost=4, prob=1),  
+        Task("EE 2", time_cost=2, prob=0.9)], 
+        {14: 100},
+        penalty=-200)
     # Goal("Goal C", [
     #     Task("Task C1", 3),  
     #     Task("Task C2", 3)], 
@@ -232,7 +234,7 @@ for i in range(1):
     print()
 """
 
-todolist = ToDoList(goals7, start_time=0, end_time=20, nongoal_val=1)
+todolist = ToDoList(goals7, start_time=0, end_time=14, nongoal_val=1)
 print 'mdp'
 mdp = ToDoListMDP(todolist)
 print 'todo.getTasks'
@@ -246,12 +248,46 @@ print mdp.getStartState()
 # print ''
 
 
-# run with backward induction
+# get optimal policy with backward induction
 print 'backward induction'
-bi_policy, bi_iterations, bi_time_elapsed = backward_induction(mdp)
+bi_policy = backward_induction(mdp, printTime=False)
 print 'policy', bi_policy
-print 'time (s)', bi_time_elapsed
+# print 'time (s)', bi_time_elapsed
 print ''
+
+# test our optimal policy
+trials = 1
+for i in range(trials):
+    print 'Trial:', i
+    start_state = mdp.getStartState()
+    state = start_state
+    performed_tasks = []
+    reward = 0
+    # Record policy from start state
+    while not mdp.isTerminal(state):
+        print state
+        optimal_action = bi_policy[state]
+        # print "opt action", optimal_action
+        task = mdp.getTasksList()[optimal_action]
+        print task.getDescription()
+        performed_tasks.append((state, task))
+        p = random.random()
+        next_state_tasks = list(state[0])
+        if p < task.getProb() and optimal_action != -1:
+            next_state_tasks[optimal_action] = 1
+        next_state = (tuple(next_state_tasks), state[1] + task.getTimeCost())
+        reward += mdp.getReward(state, optimal_action, next_state)
+        print 'Reward:', reward
+        state = next_state
+
+    # for state, task in performed_tasks:
+    #     print state
+    #     print task.getDescription()
+    
+    # optimal_policy = [task.getDescription() for state, task in performed_tasks]
+    # print optimal_policy
+
+
 
 """
 # run with goal mdp and then task mdp

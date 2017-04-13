@@ -5,7 +5,7 @@ from scipy.sparse import linalg as sLA
 from scipy.sparse import csc_matrix
 from scipy.sparse import csr_matrix
 from todolist import *
-from mdp_backward_induction import *
+from mdp_solvers import *
 
 def solve_big_goals(goals_list, end_time):
 	total_time = 0

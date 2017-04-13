@@ -411,7 +411,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         tasks = state[0]
         currentTime = state[1]
-        if currentTime <= self.todolist.getEndTime(): 
+        if not self.isTerminal(state): 
             # possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime))]
             # possible_actions = [i for i, task in enumerate(tasks) if (task == 0 and self.isTaskActive(self.index_to_task[i], currentTime + self.index_to_task[i].getTimeCost()))]
             possible_actions = [i for i, task in enumerate(tasks) if task == 0]
@@ -541,6 +541,91 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         goal = task.getGoal()
         return self.isGoalActive(goal, time)
+
+    def backward_induction(self, time=False):
+        """
+        Given a ToDoListMDP, perform value iteration/backward induction to find the optimal policy
+        Input: ToDoListMDP
+        Output: Optimal policy (and time elapsed if specified)
+        """
+        start = time.time()
+
+        V_states = {} # maps state to (value, action)
+        linearized_states = self.getLinearizedStates()
+        # print "linearized states:", linearized_states
+        numTasks = len(linearized_states)
+        for state in linearized_states:
+            V_states[state] = (0, None)
+
+        # Perform Backward Iteration (Value Iteration 1 Time)
+        start = time.time()
+
+        for state in linearized_states:
+            V_states[state] = choose_action(mdp, state, V_states)        
+
+        end = time.time()
+
+        optimal_policy = {}
+        for state in V_states:
+            optimal_policy[state] = V_states[state][1]
+
+        time_elapsed = end - start
+
+        # mdp.calculatePseudorewards(V_states)
+        
+        if time:
+            return optimal_policy, time_elapsed
+        else:
+            return optimal_policy
+
+    def get_Q_value(mdp, state, action, V_states):
+        """
+        Input: 
+        mdp: ToDoList MDP
+        state: current state (tasks, time)
+        action: index of action in mdp's tasks
+        V_states: dictionary mapping states to current best (value, action)
+        Output:
+        total: Q-value of state
+        """
+        Q_value = 0
+        trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
+        for pair in trans_states_and_probs:
+            next_state = pair[0]
+            tasks = next_state[0]
+            time = next_state[1]
+            prob = pair[1]
+            # IMPORTANT: below varies on val iter or policy iter
+            v = V_states[next_state]
+            if isinstance(v, tuple):
+                next_state_value = V_states[next_state][0]
+            else:
+                next_state_value = V_states[next_state]
+            Q_value += prob * (mdp.getReward(state, action, next_state) + mdp.getGamma() * next_state_value)
+        return Q_value
+
+    def choose_action(mdp, state, V_states):
+        """
+        Input: 
+        mdp: ToDoList MDP
+        state: current state (tasks, time)
+        V_states: dictionary mapping states to current best (value, action)
+        Output:
+        best_value: value of state state
+        best_action: index of action that yields highest value at current state
+        """
+        possible_actions = mdp.getPossibleActions(state)   
+        best_action = None
+        best_value = -float('inf')
+        if mdp.isTerminal(state):
+            best_value = 0
+            best_action = 0
+        for a in possible_actions:
+            q_value = get_Q_value(mdp, state, a, V_states)
+            if q_value > best_value:
+                best_value = q_value
+                best_action = a
+        return (best_value, best_action)
 
 
 class MDPGraph():
