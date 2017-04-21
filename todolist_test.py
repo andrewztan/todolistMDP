@@ -198,7 +198,7 @@ goals7 = [
         {7: 5},
         penalty=-10),
     Goal("EE Project", [
-        Task("EE 1", time_cost=4, prob=1),  
+        Task("EE 1", time_cost=4, prob=0.95),  
         Task("EE 2", time_cost=2, prob=0.9)], 
         {14: 100},
         penalty=-200)
@@ -235,10 +235,7 @@ for i in range(1):
 """
 
 todolist = ToDoList(goals7, start_time=0, end_time=14, nongoal_val=1)
-print 'mdp'
 mdp = ToDoListMDP(todolist)
-print 'todo.getTasks'
-print mdp.getStartState() 
 
 # run with value iteration
 # print 'value iteration'
@@ -251,7 +248,7 @@ print mdp.getStartState()
 # get optimal policy with backward induction
 print 'backward induction'
 bi_policy = backward_induction(mdp, printTime=False)
-print 'policy', bi_policy
+# print 'policy', bi_policy
 # print 'time (s)', bi_time_elapsed
 print ''
 

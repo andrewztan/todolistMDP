@@ -38,7 +38,6 @@ def getValueAndAction(mdp, state, V_states):
     best_value: value of state state
     best_action: index of action that yields highest value at current state
     """
-    # print V_states
     possible_actions = mdp.getPossibleActions(state)   
     best_action = None
     best_value = -float('inf')
@@ -103,7 +102,6 @@ def value_iteration(mdp, printTime=False):
     # perform value iteration with s iterations
     converged = False
     iterations = 0
-    # print V_states
 
     # Perform Value Iteration
     while not converged:
@@ -139,8 +137,6 @@ def policy_evaluation(mdp, policies, empty_A, empty_b):
     given an MDP and a policy dictionary (from policy improvement)
     returns the V states for that policy for each state. V_states: {state: (V(s), action)}
     """
-    # print(policies)
-    # start = time.time()
 
     states = mdp.getStates()
     gamma = mdp.getGamma()
@@ -153,34 +149,21 @@ def policy_evaluation(mdp, policies, empty_A, empty_b):
 
     for i in range(n):
 
-        # start = time.time()
-
         state = states[i]
         action = policies[state]
         A[i][i] = -1
-        # print mdp.getTransitionStatesAndProbs(state, action)
-        # if i == n-1: print 'this state', state
+
         for pair in mdp.getTransitionStatesAndProbs(state, action):
             
             next_state, prob = pair
             reward = mdp.getReward(state, action, next_state)
             j = states.index(next_state)
 
-            # if i == n-1: 
-                # print 'next state', next_state
-                # print 'prob', prob
-                # print 'reward', reward
-
             A[i][j] = gamma * prob
             b[i] = b[i] - prob * reward
 
 
     end = time.time()
-    # print 'creating matrix time', end - start 
-    # print A
-    # print b
-    # """
-
 
     start = time.time()
     v = LA.solve(A, b)
@@ -207,9 +190,6 @@ def policy_extraction(mdp, V_states):
     for state in states:
         best_action = getValueAndAction(mdp, state, V_states)[1]
         policies[state] = best_action
-
-    # end = time.time()
-    # print 'policy extraction time', end - start
 
     return policies
 

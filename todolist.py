@@ -14,7 +14,6 @@ class ToDoList():
       To-do List
     """
     def __init__(self, goals, start_time=0, end_time=100, nongoal_val=1):
-        # layout
         self.goals = goals # list of goals
         # self.completed_goals = [goal for goal in self.goals if goal.isComplete()] # list of completed goals
         # self.incompleted_goals = [goal for goal in self.goals if not goal.isComplete()]
