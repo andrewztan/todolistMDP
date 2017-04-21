@@ -252,6 +252,7 @@ bi_policy = backward_induction(mdp, printTime=False)
 # print 'time (s)', bi_time_elapsed
 print ''
 
+"""
 # test our optimal policy
 trials = 1
 for i in range(trials):
@@ -276,6 +277,7 @@ for i in range(trials):
         reward += mdp.getReward(state, optimal_action, next_state)
         print 'Reward:', reward
         state = next_state
+ """
 
     # for state, task in performed_tasks:
     #     print state
@@ -298,6 +300,15 @@ print 'time', time
 # pi_policy, pi_iterations, pi_time_elapsed = policy_iteration(mdp)
 # print 'policy', pi_policy
 # print 'time (s)', pi_time_elapsed
+
+
+goals = todolist.getGoals()
+goalA = goals[0]
+print goalA.getDescription()
+tasksA = goalA.getTasks()
+taskA1 = tasksA[0]
+print taskA1.getGoal().getDescription()
+
 
 
 

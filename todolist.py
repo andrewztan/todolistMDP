@@ -15,29 +15,22 @@ class ToDoList():
     """
     def __init__(self, goals, start_time=0, end_time=100, nongoal_val=1):
         self.goals = goals # list of goals
-        # self.completed_goals = [goal for goal in self.goals if goal.isComplete()] # list of completed goals
-        # self.incompleted_goals = [goal for goal in self.goals if not goal.isComplete()]
-        # incomplete goals attribute goes here ***
+        self.completed_goals = set([goal for goal in self.goals if goal.isComplete()]) # set of completed goals
+        self.incomplete_goals = set([goal for goal in self.goals if not goal.isComplete()])
         self.time = start_time # current time
         self.tasks = [] # list of tasks
         for goal in self.goals:
             self.tasks.extend(goal.getTasks())
-        # self.completed_tasks = [task for task in self.tasks if task.isComplete()] # list of completed tasks
-        # self.incompleted_tasks = [task for task in self.tasks if not task.isComplete()]
-        # incompleted tasks attribute goes here ***
+        self.completed_tasks = set([task for task in self.tasks if task.isComplete()]) # set of completed tasks
+        self.incomplete_tasks = set([task for task in self.tasks if not task.isComplete()])
         
         self.start_time = start_time
         self.end_time = end_time
 
-        # create "Nongoal" goal with tasks and add to goals
-        # self.nongoal = Goal("Nongoal", [], {end_time: 0}, 0, True, False)
-        self.nongoal_val = nongoal_val
-
-        # Nongoal task
-        self.nongoal_task = Task("Nongoal Task", 1, 1, nongoal_val)
-        # for i in range(1, end_time + 1):
-        #     self.nongoal.addTask(Task("Non-goal, Time: " + str(i), i, 1, i * nongoal_val, False, self.nongoal))
-        # self.goals.append(nongoal)
+        # Nongoal task with time=1, prob=1
+        self.nongoal_task = Task("Nongoal Task", time_cost=1, prob=1, reward=nongoal_val, nongoal=True)
+        # create Nongoal "Goal" with Nongoal Task
+        self.nongoal = Goal(description="Nongoal", tasks=[self.nongoal_task], reward={float('inf'): 0}, nongoal=True)
 
 
     # do a random action
@@ -59,39 +52,38 @@ class ToDoList():
         for goal in self.goals:
             if self.time > goal.getDeadline():
                 penalty += goal.deadlinePenalty()
-                goal.setCompleted(True)
+                # goal.setCompleted(True)
                 # something about incomplete goals and tasks ***
         return penalty
     
     def doTask(self, task):
-        p = task.getProb()
+        goal = task.getGoal()
+        threshold = task.getProb()
+        p = random.random()
         reward = 0
         reward += task.getReward()
-        if random.random() < p and self.time <= task.getGoal().getDeadline():
-            # task completed
+        # check that task is completed on time and NOT a nongoal and goal was not complete before task
+        if p < threshold and self.time <= goal.getDeadline() and not task.isNongoal() and not self.isGoalComplete(goal):
             task.setCompleted(True)
-            # self.completed_tasks.append(task), add this back later when needed ***
-
-            # if non-goal task, add back a task with same attributes. non-goal will never be complete
-            if task.getGoal().isNongoal():
-                copy_task = task.copy()
-                task.getGoal().addTask(copy_task)
-            # if goal complete, get reward
-            elif self.isGoalComplete(task.getGoal()):
-                reward += self.getGoalReward(task.getGoal())
-                # soemthing about completed goals ***
+            self.incomplete_tasks.remove(task)
+            self.completed_tasks.add(task)
+            # if completion of task completes the goal
+            if self.isGoalComplete(goal):
+                reward += goal.getReward(self.time) # goal completion reward
+                self.incomplete_goals.remove(goal)
+                self.completed_goals.add(goal)
         return reward
 
     def getNongoalVal(self):
-        return self.nongoal_val
+        return self.nongoal_task.getReward()
 
     def getNongoalTask(self):
         return self.nongoal_task
 
-    def getGoalReward(self, goal):
-        return goal.getReward(self.time)
-
     def isGoalComplete(self, goal):
+        """
+        Method for checking if goal is complete by checking if all tasks are complete
+        """
         if goal.isComplete():
             return True
         for task in goal.tasks:
@@ -116,10 +108,21 @@ class ToDoList():
         return self.goals
 
     def addGoal(self, goal):
+    	"""
+    	Add an entire goal
+    	"""
         self.goals.append(goal)
         self.tasks.extend(goal.getTasks())
+        if goal.isComplete():
+        	self.completed_goals.add(goal)
+        else:
+        	self.incomplete_goals.add(goal)
+
 
     def addTask(self, goal, task):
+    	"""
+    	Adds task to the specified goal
+    	"""
         self.tasks.append(task)
         goal.addTask(task)
 
@@ -133,7 +136,7 @@ class ToDoList():
 
 
 class Goal():
-    def __init__(self, description, tasks, reward, penalty=0, nongoal=False, completed=False):
+    def __init__(self, description, tasks, reward, penalty=0, completed=False, nongoal=False):
         # parameters
         self.description = description # string description of goal
         self.tasks = tasks # list of Task objects
@@ -143,7 +146,7 @@ class Goal():
         self.completed = completed # boolean for completion status
         self.deadline = max(reward.keys())
         self.penalty = penalty # penalty if goal is not completeed by the deadline
-        self.nongoal = nongoal
+        self.nongoal = nongoal # boolean for whether goal is a nongoal
 
     ### Get functions ###
     def getTasks(self):
@@ -193,7 +196,7 @@ class Goal():
 
 
 class Task():
-    def __init__(self, description, time_cost, prob=1, reward=0, completed=False, goal=None):
+    def __init__(self, description, time_cost, prob=1, reward=0, completed=False, goal=None, nongoal=False):
         # parameters
         self.description = description # string description of task
         self.goal = None # Goal object that encompasses this task
@@ -201,6 +204,7 @@ class Task():
         self.time_cost = time_cost # units of time required to perform a task
         self.reward = reward # integer value, usually 0
         self.completed = completed # boolean for completion status
+        self.nongoal = nongoal # boolean for whether task is a nongoal task
 
     ### Get functions ###
     def getDescription(self):
@@ -228,6 +232,9 @@ class Task():
     def isComplete(self):
         return self.completed
 
+    def isNongoal(self):
+        return self.nongoal
+
     ### Set functions ###
     def setGoal(self, goal):
         self.goal = goal
@@ -254,8 +261,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.todolist = todolist
         self.start_state = self.getStartState()
 
-        self.nongoal_val = todolist.getNongoalVal()
+        # nongoal
         self.nongoal_task = todolist.getNongoalTask()
+        self.nongoal_val = self.nongoal_task.getReward()
+
         # create mapping of indices to tasks - represented as list
         self.index_to_task = list(todolist.getTasks())
         self.index_to_task.append(self.nongoal_task) # add nongoal task
@@ -271,12 +280,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         for goal in self.goals:
             task_indices = [self.task_to_index[task] for task in goal.getTasks()]
             self.goal_to_indices[goal] = task_indices
-
-        # create a list of deadline mappings (Do we need this if goal object has deadlines already?)
-        self.deadlineMaps = {goal: goal.getRewardDict() for goal in self.goals}
-
-        # create an initially empty set of inactive goals
-        self.inactiveGoals = set()
 
         # parameters
         self.livingReward = 0.0
