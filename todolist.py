@@ -42,18 +42,24 @@ class ToDoList():
     # do a defined action, task
     def action(self, task):  
         reward = 0
-        self.incrementTime(task.getCost()) # first, increment the time so that we are working in the current time
+        prev_time = self.time
+        curr_time = self.time + task.getTimeCost()
+        self.incrementTime(task.getTimeCost()) # increment the time so that we are working in the current time
         reward += self.doTask(task)
-        reward += self.checkDeadlines()
+        reward += self.checkDeadlines(prev_time, curr_time)
         return reward
 
-    def checkDeadlines(self):
+    def checkDeadlines(self, prev_time, curr_time):
+        """
+        Check which goals passed their deadline between prev_time and curr_time
+        If goal passed deadline during task, incur penalty
+        """
         penalty = 0
-        for goal in self.goals:
-            if self.time > goal.getDeadline():
+        # iterate through all incomplete goals
+        for goal in self.incomplete_goals:
+            # check 1) goal is now passed deadline at curr_time 2) goal was not passed deadline at prev_time 
+            if curr_time > goal.getDeadline() and not prev_time > goal.getDeadline():
                 penalty += goal.deadlinePenalty()
-                # goal.setCompleted(True)
-                # something about incomplete goals and tasks ***
         return penalty
     
     def doTask(self, task):
@@ -62,15 +68,15 @@ class ToDoList():
         p = random.random()
         reward = 0
         reward += task.getReward()
-        # check that task is completed on time and NOT a nongoal and goal was not complete before task
+        # check that task is completed on time and NOT a nongoal and goal was not already complete before task
         if p < threshold and self.time <= goal.getDeadline() and not task.isNongoal() and not self.isGoalComplete(goal):
             task.setCompleted(True)
-            self.incomplete_tasks.remove(task)
+            self.incomplete_tasks.discard(task)
             self.completed_tasks.add(task)
             # if completion of task completes the goal
             if self.isGoalComplete(goal):
                 reward += goal.getReward(self.time) # goal completion reward
-                self.incomplete_goals.remove(goal)
+                self.incomplete_goals.discard(goal)
                 self.completed_goals.add(goal)
         return reward
 
@@ -154,6 +160,8 @@ class Goal():
 
     # return reward based on time
     def getReward(self, time):
+        if time > self.getDeadline():
+            return 0
         times = sorted(self.reward.keys())
         t = next(val for x, val in enumerate(times) if val >= time)
         return self.reward[t]
@@ -224,9 +232,6 @@ class Task():
     # return reward 
     def getReward(self):
         return self.reward
-
-    def getCost(self):
-        return self.time_cost
 
     # return completion status, does not do any computation, just return self.completed
     def isComplete(self):
