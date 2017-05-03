@@ -210,6 +210,41 @@ goals7 = [
 ]
 
 
+simple_goals_deterministic = [
+    Goal("CS HW", [
+        Task("CS 1", time_cost=1, prob=1), 
+        Task("CS 2", time_cost=1, prob=1)], 
+        {3: 5},
+        penalty=-10),
+    Goal("EE Project", [
+        Task("EE 1", time_cost=1, prob=1),  
+        Task("EE 2", time_cost=2, prob=1)], 
+        {4: 100},
+        penalty=-200)
+]
+
+simple_goals_probabilistic = [
+    Goal("CS HW", [
+        Task("CS 1", time_cost=1, prob=0.9), 
+        Task("CS 2", time_cost=1, prob=0.8)], 
+        {4: 5},
+        penalty=-10),
+    Goal("EE Project", [
+        Task("EE 1", time_cost=1, prob=0.95),  
+        Task("EE 2", time_cost=2, prob=0.95)], 
+        {5: 100},
+        penalty=-200)
+]
+
+simple_goals_probabilistic2 = [
+    Goal("CS HW", [
+    	Task("CS 1", time_cost=1, prob=0.9), 
+    	Task("CS 2", time_cost=1, prob=0.8)], 
+        {3: 100},
+        penalty=-200)
+]
+
+
 # plotting number of tasks vs runtime with time kept constant at 500
 
 
@@ -217,24 +252,8 @@ goals_list = [goals1, goals2, goals3, goals4, goals5, goals6]
 iterations_list = []
 times = []
 
-"""
-for i in range(3):
-=======
-for i in range(1):
->>>>>>> 94cc6dcb1ab2c3bea2a18b5db1058347294f71da
-    print('goals', i+1)
-    goals = goals_list[i]
-    todolist = ToDoList(goals, start_time=0, end_time=end_time)
-    mdp = ToDoListMDP(todolist)
-    policy, iterations, time_elapsed = value_iteration(mdp)
-    iterations_list.append(iterations)
-    times.append(time_elapsed)
-    print(time_elapsed)
-    print(policy)
-    print()
-"""
 
-todolist = ToDoList(goals7, start_time=0, end_time=14, nongoal_val=1)
+todolist = ToDoList(simple_goals_probabilistic2, start_time=0, nongoal_val=1)
 mdp = ToDoListMDP(todolist)
 
 # run with value iteration
@@ -248,9 +267,41 @@ mdp = ToDoListMDP(todolist)
 # get optimal policy with backward induction
 print 'backward induction'
 bi_policy = backward_induction(mdp, printTime=False)
+
+print "Optimal Policy:"
+print mdp.get_optimal_policy_dict()
+print "Value Function:"
+print mdp.get_value_function()
+print "Pseudo-rewards:"
+print sorted(mdp.getPseudorewards().values())[::-1]
+print mdp.getPseudorewards()
+
+print ""
+print ""
+print mdp.getReward(((1, 0), 2), 1, ((1, 1), 3))
+print mdp.get_state_value(((1, 0), 2))
+print mdp.get_state_value(((1, 1), 3))
 # print 'policy', bi_policy
 # print 'time (s)', bi_time_elapsed
-print ''
+
+
+"""
+start_state = mdp.getStartState()
+print bi_policy[start_state]
+for action in mdp.getPossibleActions(start_state):
+	print action, mdp.getPseudorewards(start_state, action)
+
+state = ((0, 0, 0, 0), 1)
+print bi_policy[state]
+for action in mdp.getPossibleActions(state):
+	print action, mdp.getPseudorewards(state, action)
+
+state = ((0, 0, 0, 0), 2)
+print bi_policy[state]
+for action in mdp.getPossibleActions(state):
+	print action, mdp.getPseudorewards(state, action)
+"""
+
 
 """
 # test our optimal policy
@@ -300,14 +351,6 @@ print 'time', time
 # pi_policy, pi_iterations, pi_time_elapsed = policy_iteration(mdp)
 # print 'policy', pi_policy
 # print 'time (s)', pi_time_elapsed
-
-
-goals = todolist.getGoals()
-goalA = goals[0]
-print goalA.getDescription()
-tasksA = goalA.getTasks()
-taskA1 = tasksA[0]
-print taskA1.getGoal().getDescription()
 
 
 

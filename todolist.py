@@ -13,7 +13,7 @@ class ToDoList():
     """
       To-do List
     """
-    def __init__(self, goals, start_time=0, end_time=100, nongoal_val=1):
+    def __init__(self, goals, start_time=0, end_time=None, nongoal_val=1):
         self.goals = goals # list of goals
         self.completed_goals = set([goal for goal in self.goals if goal.isComplete()]) # set of completed goals
         self.incomplete_goals = set([goal for goal in self.goals if not goal.isComplete()])
@@ -25,6 +25,13 @@ class ToDoList():
         self.incomplete_tasks = set([task for task in self.tasks if not task.isComplete()])
         
         self.start_time = start_time
+        if end_time == None:
+            max_deadline = float('-inf')
+            for goal in self.goals:
+                goal_deadline = goal.getDeadline()
+                if goal_deadline > max_deadline:
+                    max_deadline = goal_deadline
+            end_time = max_deadline + 1
         self.end_time = end_time
 
         # Nongoal task with time=1, prob=1
@@ -305,6 +312,14 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         self.reverse_DAG = MDPGraph(self)
         self.linearized_states = self.reverse_DAG.linearize()
 
+        self.V_states, self.optimal_policy = self.value_and_policy_functions()
+
+        # Pseudo-rewards
+        self.pseudorewards = {} # keys are (s, a, s'). values are PR(s, a, s')
+        self.transformed_pseudorewards = {} # keys are (s, a, s'). values are PR'(s, a, s')
+        self.calculatePseudorewards() # calculate pseudorewards for each state
+        # self.transformPseudorewards() # applies linear transform PR to PR'
+
     def getPseudorewards(self):
         """ getter method for pseudorewards
         pseudorewards is stored as a dictionary, 
@@ -312,23 +327,41 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         """
         return self.pseudorewards
 
-    def calculatePseudorewards(self, v_states):
+    def getTransformedPseudorewards(self):
+        return self.transformed_pseudorewards
+
+    def getExpectedPseudorewards(self, state, action):
+        """
+        Return the expected Pseudorewards of a (state, action) pair
+        """
+        expected_pr = 0
+        trans_states_and_probs = self.getTransitionStatesAndProbs(state, action)
+        for pair in trans_states_and_probs:
+            next_state, prob = pair
+            expected_pr += prob * self.pseudorewards[(state, action, next_state)]
+        return expected_pr
+
+    def getExpectedTransformedPseudorewards(self, state, action):
+        """
+        Return the expected Pseudorewards of a (state, action) pair
+        """
+        expected_pr = 0
+        trans_states_and_probs = self.getTransitionStatesAndProbs(state, action)
+        for pair in trans_states_and_probs:
+            next_state, prob = pair
+            expected_pr += prob * self.transformed_pseudorewards[(state, action, next_state)]
+        return expected_pr
+
+    def calculatePseudorewards(self):
         """
         private method for calculating untransformed pseudorewards PR
         """
-        self.pseudorewards = {} # keys are (s, s'). values are PR(s, a, s')
         for state in self.states:
-            actions = self.getPossibleActions(state)
-            for a in actions:
-                trans_states_and_probs = self.getTransitionStatesAndProbs(state, a)
-                for pair in trans_states_and_probs:
-                    next_state, prob = pair
-                    r = self.getReward(state, a, next_state)
-                    pr = v_states[next_state][0] - v_states[state][0] + r
-                    self.pseudorewards[(state, next_state)] = pr
-
-        # applies linear transform PR to PR'
-        self.transformPseudorewards()
+            for action in self.getPossibleActions(state):
+                for next_state, prob in self.getTransitionStatesAndProbs(state, action):
+                    r = self.getReward(state, action, next_state)
+                    pr = self.V_states[next_state][0] - self.V_states[state][0] + r
+                    self.pseudorewards[(state, action, next_state)] = pr
 
     def transformPseudorewards(self):
         """
@@ -339,10 +372,6 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         highest = -float('inf')
         sec_highest = -float('inf')
 
-        # a = list(set(self.pseudorewards.values()))
-        # list.sort(a)
-        # print a
-
         for trans in self.pseudorewards:
             pr = self.pseudorewards[trans]
             if pr > highest:
@@ -350,17 +379,23 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
                 highest = pr
             elif pr > sec_highest and pr < highest:
                 sec_highest = pr
+        
+        # for state in self.states:
+        #     for action in self.getPossibleActions(state):
+        #         for 
 
-        # print highest
-        # print sec_highest
 
-        alpha = max(range(abs(highest), int(math.floor(abs(sec_highest)))))
+        print highest
+        print sec_highest
+
+        alpha = (highest + sec_highest) / 2
+        print alpha
         beta = 1
         if alpha <= 1.0: beta = 10
 
         for trans in self.pseudorewards:
             pr = self.pseudorewards[trans]
-            self.pseudorewards[trans] = (alpha + pr) * beta
+            self.transformed_pseudorewards[trans] = (alpha + pr) * beta
         
     def getLinearizedStates(self):
         return self.linearized_states
@@ -585,7 +620,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         else:
             return optimal_policy
 
-    def get_Q_value(mdp, state, action, V_states):
+    def get_Q_value(self, state, action, V_states):
         """
         Input: 
         mdp: ToDoList MDP
@@ -596,7 +631,7 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         total: Q-value of state
         """
         Q_value = 0
-        trans_states_and_probs = mdp.getTransitionStatesAndProbs(state, action)
+        trans_states_and_probs = self.getTransitionStatesAndProbs(state, action)
         for pair in trans_states_and_probs:
             next_state = pair[0]
             tasks = next_state[0]
@@ -608,10 +643,10 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
                 next_state_value = V_states[next_state][0]
             else:
                 next_state_value = V_states[next_state]
-            Q_value += prob * (mdp.getReward(state, action, next_state) + mdp.getGamma() * next_state_value)
+            Q_value += prob * (self.getReward(state, action, next_state) + self.getGamma() * next_state_value)
         return Q_value
 
-    def choose_action(mdp, state, V_states):
+    def getValueAndAction(self, state, V_states):
         """
         Input: 
         mdp: ToDoList MDP
@@ -621,18 +656,57 @@ class ToDoListMDP(mdp.MarkovDecisionProcess):
         best_value: value of state state
         best_action: index of action that yields highest value at current state
         """
-        possible_actions = mdp.getPossibleActions(state)   
+        possible_actions = self.getPossibleActions(state)   
         best_action = None
         best_value = -float('inf')
-        if mdp.isTerminal(state):
+        if self.isTerminal(state):
             best_value = 0
             best_action = 0
         for a in possible_actions:
-            q_value = get_Q_value(mdp, state, a, V_states)
+            q_value = self.get_Q_value(state, a, V_states)
             if q_value > best_value:
                 best_value = q_value
                 best_action = a
         return (best_value, best_action)
+
+
+    def value_and_policy_functions(self):
+        """
+        Given a ToDoListMDP, perform value iteration/backward induction to find the optimal value function
+        Input: ToDoListMDP
+        Output: Dictionary of optimal value of each state
+        """
+        V_states = {} # maps state to (value, action)
+        lin_states = self.linearized_states
+        # print "linearized states:", linearized_states
+        numTasks = len(lin_states)
+        for state in lin_states:
+            V_states[state] = (0, None)
+
+        # Perform Backward Iteration (Value Iteration 1 Time)
+        for state in lin_states:
+            V_states[state] = self.getValueAndAction(state, V_states)        
+
+        optimal_policy = {}
+        for state in V_states:
+            optimal_policy[state] = V_states[state][1]
+
+        return V_states, optimal_policy
+
+    def get_optimal_policy_dict(self):
+        """
+        Returns the mapping of state to the optimal policy at that state
+        """
+        return self.optimal_policy
+
+    def get_optimal_policy(self, state):
+        return self.optimal_policy[state]
+
+    def get_value_function(self):
+        return self.V_states
+
+    def get_state_value(self, state):
+        return self.V_states[state][0]
 
 
 class MDPGraph():
